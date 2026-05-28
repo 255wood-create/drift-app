@@ -115,7 +115,7 @@ function EventCard({event,saved,interested,onSave,onInterest,index,distMiles}){
         </div>
       </div>
       {/* Compact footer */}
-      <div style={{padding:"5px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div style={{padding:"4px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{minWidth:0,flex:1}}>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:T.charcoalMute,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>📍 {event.location}{distMiles!=null?` · ${fmt(distMiles)}`:""}</div>
           {event.vibe&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:T.charcoalMute,fontStyle:"italic",marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.vibe}</div>}
