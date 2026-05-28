@@ -48,17 +48,15 @@ async function toggleIntDb(userId,eventId,wasInt){
 
 const CATEGORIES=[
   {id:"all",label:"All",icon:"✦"},{id:"music",label:"Live Music",icon:"♪"},
-  {id:"sports",label:"Sports & Pickup",icon:"◎"},{id:"outdoor",label:"Outdoor Activities",icon:"△"},
-  {id:"wellness",label:"Wellness / Fitness",icon:"◇"},{id:"food",label:"Food & Social",icon:"○"},
-  {id:"community",label:"Community",icon:"⬡"},
+  {id:"sports",label:"Sports / Fitness",icon:"◎"},{id:"food",label:"Food / Social",icon:"○"},
 ];
 
 const CAT_META={
   music:{color:"#6B4FA0",bg:"#F0EDF8",label:"Live Music",gradBg:"linear-gradient(160deg,#3A2060,#0D0520)",gradAccent:"rgba(217,164,65,0.35)"},
-  sports:{color:T.sky,bg:T.skyLt,label:"Sports & Pickup",gradBg:"linear-gradient(160deg,#1A3A5C,#0D2040)",gradAccent:"rgba(79,134,166,0.4)"},
+  sports:{color:T.sky,bg:T.skyLt,label:"Sports / Fitness",gradBg:"linear-gradient(160deg,#1A3A5C,#0D2040)",gradAccent:"rgba(79,134,166,0.4)"},
   outdoor:{color:T.pine,bg:T.pineLt,label:"Outdoor Activities",gradBg:"linear-gradient(160deg,#2A4A3A,#0F1F18)",gradAccent:"rgba(143,175,154,0.25)"},
   wellness:{color:"#8B7A3A",bg:"#F5F0DC",label:"Wellness / Fitness",gradBg:"linear-gradient(160deg,#5C4A1A,#3D2E0A)",gradAccent:"rgba(217,164,65,0.4)"},
-  food:{color:T.amber,bg:T.amberLt,label:"Food & Social",gradBg:"linear-gradient(160deg,#5C3A1A,#3D2008)",gradAccent:"rgba(217,164,65,0.3)"},
+  food:{color:T.amber,bg:T.amberLt,label:"Food / Social",gradBg:"linear-gradient(160deg,#5C3A1A,#3D2008)",gradAccent:"rgba(217,164,65,0.3)"},
   community:{color:T.sage,bg:T.sageLt,label:"Community",gradBg:"linear-gradient(160deg,#2A3D30,#151F18)",gradAccent:"rgba(143,175,154,0.3)"},
 };
 
