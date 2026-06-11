@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { createClient } from '@supabase/supabase-js';
 
 const T = {
   fog:"#F5F3EF",stone:"#D9D6CF",stoneDark:"#B8B4AC",
@@ -20,7 +21,8 @@ function fmt(mi){if(mi===null)return"—";if(mi<0.1)return"<0.1 mi";return`${mi.
 
 const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL  || "https://lknoxozdbkikysxoarzu.supabase.co";
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON || "sb_publishable_myANV71Ao-e3TRTqM5UuOA_mTobfrdH";
-const SUPABASE_READY = SUPABASE_URL.includes("supabase.co");
+const SUPABASE_READY = true;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 async function sbFetch(path,opts={}){
   const res=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{
