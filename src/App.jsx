@@ -20,7 +20,7 @@ function haversine(lat1,lon1,lat2,lon2){
 function fmt(mi){if(mi===null)return"—";if(mi<0.1)return"<0.1 mi";return`${mi.toFixed(1)} mi`;}
 
 const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL  || "https://lknoxozdbkikysxoarzu.supabase.co";
-const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON || "sb_publishable_myANV71Ao-e3TRTqM5UuOA_mTobfrdH";
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
 const SUPABASE_READY = true;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
