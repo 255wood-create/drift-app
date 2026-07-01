@@ -311,7 +311,13 @@ export default function App(){
   const toggleSave=async id=>{const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});if(SUPABASE_READY)await toggleSavedDb("demo-user",id,was).catch(console.error);};
   const toggleInt=async id=>{const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});if(SUPABASE_READY)await toggleIntDb("demo-user",id,was).catch(console.error);};
 
-  const filtered=withDist;
+  const filtered=withDist.filter(e=>{
+    if(activeCat!=="all"&&e.category!==activeCat)return false;
+    if(activeFilter==="Trending"&&!e.is_trending)return false;
+    if(activeFilter!=="Trending"&&e.time_bucket!==activeFilter)return false;
+    if(search&&!e.title.toLowerCase().includes(search.toLowerCase())&&!e.location.toLowerCase().includes(search.toLowerCase())&&!(e.vibe||"").toLowerCase().includes(search.toLowerCase()))return false;
+    return true;
+  }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
 
   const NAV=[{id:"feed",icon:"⚡",label:"Discover"},{id:"map",icon:"◎",label:"Map"},{id:"saved",icon:"🔖",label:"Saved"},{id:"profile",icon:"◈",label:"Profile"}];
 
