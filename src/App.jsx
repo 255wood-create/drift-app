@@ -306,7 +306,7 @@ export default function App(){
       .catch(err=>{setDbError(err.message);console.error("Supabase error:", err);setLoading(false);});
   },[activeFilter,activeCat]);
 
-  const withDist=events.map(e=>({...e,distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
+  const withDist=events.map(e=>({...e,cat:e.cat||e.category,distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
 
   const toggleSave=async id=>{const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});if(SUPABASE_READY)await toggleSavedDb("demo-user",id,was).catch(console.error);};
   const toggleInt=async id=>{const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});if(SUPABASE_READY)await toggleIntDb("demo-user",id,was).catch(console.error);};
