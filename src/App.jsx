@@ -312,7 +312,7 @@ export default function App(){
   const toggleInt=async id=>{const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});if(SUPABASE_READY)await toggleIntDb("demo-user",id,was).catch(console.error);};
 
   const filtered=withDist.filter(e=>{
-    if(activeCat!=="all"&&e.category!==activeCat)return false;
+    if(activeCat!=="all"&&(e.category||"").trim().toLowerCase()!==activeCat)return false;
         if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
     if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
     if(search&&!e.title.toLowerCase().includes(search.toLowerCase())&&!e.location.toLowerCase().includes(search.toLowerCase())&&!(e.vibe||"").toLowerCase().includes(search.toLowerCase()))return false;
