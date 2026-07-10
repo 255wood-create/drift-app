@@ -1,0 +1,6 @@
+import {getJson} from "serpapi";
+console.log("Step 1");
+const K="8009708977be74eb28810d1217841b8240b45558804ab846967afe7d7ac11b0a";
+const U="https://lknoxozdbkikysxoarzu.supabase.co";
+const S="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
+try{const r=await getJson({engine:"google_events",q:"Events in Boulder CO",api_key:K});console.log("Found",r.events_results?.length||0,"events")}catch(e){console.log("Error:",e.message)}

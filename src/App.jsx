@@ -83,7 +83,7 @@ function SaveBtn({saved,onToggle}){
 }
 
 function EventCard({event,saved,interested,onSave,onInterest,index,distMiles}){
-  const meta=CAT_META[event.cat]||CAT_META.community;
+  const meta=CAT_META[event.cat||event.category]||CAT_META.community;
   return(
     <div style={{background:T.white,boxShadow:`0 2px 12px ${T.shadow}`,overflow:"hidden",animation:`cardUp .35s ease both`,animationDelay:`${index*45}ms`}}>
       {/* Short photo header */}
