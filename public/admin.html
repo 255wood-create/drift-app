@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>go janey. admin</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F5F3EF;font-family:system-ui,sans-serif;color:#1F2320;padding:20px}
+.w{max-width:600px;margin:0 auto}
+h1{font-size:22px;font-weight:800;margin-bottom:16px}
+.c{background:white;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+label{display:block;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:10px 0 4px}
+label:first-child{margin-top:0}
+input,select{width:100%;padding:8px;border:1px solid #ddd;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#2F5D50}
+.r{display:flex;gap:10px}
+.r>*{flex:1}
+.b{padding:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:12px}
+.bg{background:#2F5D50;color:white}
+.ba{background:#D9A441;color:#1F2320}
+.msg{padding:8px;margin-top:8px;font-size:13px}
+.ok{background:#E8F0EC;color:#2F5D50}
+.er{background:#FEF0E0;color:#D9A441}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px;background:#F5F3EF;font-size:10px;color:#888;text-transform:uppercase}
+td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
+.del{background:#FEF0E0;color:#D9A441;border:none;padding:3px 8px;font-size:11px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>go janey. admin</h1>
+<div class="c" id="conn">
+<label>Supabase URL</label>
+<input id="url" value="https://lknoxozdbkikysxoarzu.supabase.co"/>
+<label>Anon Key</label>
+<input id="key" type="password" placeholder="Paste key here"/>
+<button class="b bg" onclick="doConnect()">Connect</button>
+<div id="cs"></div>
+</div>
+<div class="c">
+<h2 style="font-size:16px;margin-bottom:8px">Add Event</h2>
+<label>Title</label>
+<input id="title" placeholder="Event name"/>
+<div class="r">
+<div><label>Category</label>
+<select id="cat"><option value="music">Live Music</option><option value="sports">Sports / Fitness</option><option value="food">Food / Social</option></select></div>
+<div><label>Time Bucket</label>
+<select id="bucket"><option value="Today">Today</option><option value="Tomorrow">Tomorrow</option><option value="This Weekend">This Weekend</option><option value="Coming Up">Coming Up</option></select></div>
+</div>
+<label>Location</label>
+<input id="loc" placeholder="Venue - Neighborhood"/>
+<label>Vibe (optional)</label>
+<input id="vibe" placeholder="e.g. Live jazz - Outdoor seating"/>
+<div class="r">
+<div><label>Start Date</label><input id="sd" type="date"/></div>
+<div><label>Start Time</label><input id="st" type="time" value="18:00"/></div>
+</div>
+<div class="r">
+<div><label>Latitude</label><input id="lat" type="number" step="0.0001" placeholder="40.0093"/></div>
+<div><label>Longitude</label><input id="lng" type="number" step="0.0001" placeholder="-105.2723"/></div>
+</div>
+<p style="font-size:11px;color:#4F86A6;margin-top:6px">Google Maps - click near venue - copy two numbers</p>
+<button class="b bg" onclick="addEvt()">Add Event</button>
+<div id="as"></div>
+</div>
+<div class="c">
+<h2 style="font-size:16px;margin-bottom:8px">Current Events <span id="cnt" style="font-size:12px;color:#888"></span></h2>
+<div id="list">Connect first...</div>
+</div>
+</div>
+<script>
+var sb=null;
+function msg(id,txt,ok){var e=document.getElementById(id);e.innerHTML=txt;e.className="msg "+(ok?"ok":"er");}
+function doConnect(){
+var u=document.getElementById("url").value.trim();
+var k=document.getElementById("key").value.trim();
+if(!u||!k){msg("cs","Enter URL and key",0);return;}
+try{
+sb=window.supabase.createClient(u,k);
+sb.from("events").select("count").then(function(res){
+if(res.error)throw res.error;
+localStorage.setItem("sb_url",u);localStorage.setItem("sb_key",k);
+msg("cs","Connected!",1);loadEvts();
+}).catch(function(e){msg("cs","Failed: "+e.message,0);});
+}catch(e){msg("cs","Failed: "+e.message,0);}
+}
+function addEvt(){
+if(!sb){msg("as","Connect first",0);return;}
+var t=document.getElementById("title").value.trim();
+var l=document.getElementById("loc").value.trim();
+var la=parseFloat(document.getElementById("lat").value);
+var ln=parseFloat(document.getElementById("lng").value);
+if(!t||!l){msg("as","Title and Location required",0);return;}
+if(isNaN(la)||isNaN(ln)){msg("as","Enter coordinates",0);return;}
+var sd=document.getElementById("sd").value;
+var st=document.getElementById("st").value;
+var evt={title:t,category:document.getElementById("cat").value,location:l,
+vibe:document.getElementById("vibe").value.trim()||null,
+time_bucket:document.getElementById("bucket").value,
+starts_at:sd&&st?new Date(sd+"T"+st).toISOString():null,
+lat:la,lng:ln,is_trending:false};
+sb.from("events").insert(evt).then(function(res){
+if(res.error){msg("as","Error: "+res.error.message,0);return;}
+msg("as",t+" added!",1);
+document.getElementById("title").value="";
+document.getElementById("loc").value="";
+document.getElementById("vibe").value="";
+document.getElementById("lat").value="";
+document.getElementById("lng").value="";
+loadEvts();
+});
+}
+function loadEvts(){
+if(!sb)return;
+sb.from("events").select("*").order("created_at",{ascending:false}).then(function(res){
+if(res.error){document.getElementById("list").textContent="Error: "+res.error.message;return;}
+var data=res.data;
+document.getElementById("cnt").textContent="("+data.length+")";
+if(!data.length){document.getElementById("list").innerHTML="<p>No events</p>";return;}
+var h="<table><tr><th>Title</th><th>Cat</th><th>Bucket</th><th></th></tr>";
+for(var i=0;i<data.length;i++){var e=data[i];h+="<tr><td>"+e.title+"</td><td>"+e.category+"</td><td>"+e.time_bucket+"</td><td><button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";}
+h+="</table>";
+document.getElementById("list").innerHTML=h;
+});
+}
+function delEvt(id){
+if(!confirm("Delete?"))return;
+sb.from("events").delete().eq("id",id).then(function(){loadEvts();});
+}
+window.onload=function(){
+var u=localStorage.getItem("sb_url");
+var k=localStorage.getItem("sb_key");
+if(u)document.getElementById("url").value=u;
+if(k){document.getElementById("key").value=k;
+if(window.supabase){sb=window.supabase.createClient(u,k);
+sb.from("events").select("count").then(function(res){
+if(!res.error){msg("cs","Connected!",1);loadEvts();}
+});}}
+var d=new Date().toISOString().split("T")[0];
+document.getElementById("sd").value=d;
+};
+</script>
+</body>
+</html>
