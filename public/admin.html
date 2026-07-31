@@ -3,28 +3,26 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>go janey. admin</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<title>go janey admin</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#F5F3EF;font-family:system-ui,sans-serif;color:#1F2320;padding:20px}
+body{background:#F5F3EF;font-family:system-ui;color:#1F2320;padding:20px}
 .w{max-width:600px;margin:0 auto}
 h1{font-size:22px;font-weight:800;margin-bottom:16px}
 .c{background:white;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
 label{display:block;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:10px 0 4px}
 label:first-child{margin-top:0}
 input,select{width:100%;padding:8px;border:1px solid #ddd;font-size:14px}
-input:focus,select:focus{outline:none;border-color:#2F5D50}
+input:focus{outline:none;border-color:#2F5D50}
 .r{display:flex;gap:10px}
 .r>*{flex:1}
 .b{padding:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:12px}
 .bg{background:#2F5D50;color:white}
-.ba{background:#D9A441;color:#1F2320}
 .msg{padding:8px;margin-top:8px;font-size:13px}
 .ok{background:#E8F0EC;color:#2F5D50}
 .er{background:#FEF0E0;color:#D9A441}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:6px;background:#F5F3EF;font-size:10px;color:#888;text-transform:uppercase}
+th{text-align:left;padding:6px;background:#F5F3EF;font-size:10px;color:#888}
 td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 .del{background:#FEF0E0;color:#D9A441;border:none;padding:3px 8px;font-size:11px;cursor:pointer}
 </style>
@@ -32,11 +30,9 @@ td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 <body>
 <div class="w">
 <h1>go janey. admin</h1>
-<div class="c" id="conn">
-<label>Supabase URL</label>
-<input id="url" value="https://lknoxozdbkikysxoarzu.supabase.co"/>
-<label>Anon Key</label>
-<input id="key" type="password" placeholder="Paste key here"/>
+<div class="c">
+<label>Anon Key (legacy eyJ key)</label>
+<input id="key" type="password" placeholder="Paste your legacy eyJ anon key"/>
 <button class="b bg" onclick="doConnect()">Connect</button>
 <div id="cs"></div>
 </div>
@@ -67,78 +63,193 @@ td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 <div id="as"></div>
 </div>
 <div class="c">
+<h2 style="font-size:16px;margin-bottom:8px">EZ Upload</h2>
+<p style="font-size:13px;color:#666;margin-bottom:12px">Copy the prompt below into Claude, paste your event info, then copy Claude's JSON response back here.</p>
+<div style="position:relative">
+<label>Step 1 — Copy this prompt into Claude</label>
+<div id="promptBox" style="background:#F5F3EF;border:1px solid #ddd;padding:12px;font-size:12px;font-family:monospace;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-bottom:4px">Format the following event information as JSON for my event app. Use exactly this structure (one event or an array of multiple events). Only output the JSON, nothing else.
+
+Fields:
+- title: event name
+- category: must be "music", "sports", or "food"
+- location: venue and neighborhood, e.g. "The Sink - The Hill"
+- vibe: short description, max 80 chars (optional)
+- time_bucket: must be "Today", "Tomorrow", "This Weekend", or "Coming Up"
+- starts_at: ISO format e.g. "2026-07-15T19:00:00" (optional)
+- lat: latitude number (look up on Google Maps)
+- lng: longitude number (look up on Google Maps)
+
+Example output:
+{
+  "title": "Jazz at Foolish Craig's",
+  "category": "music",
+  "location": "Foolish Craig's - The Hill",
+  "vibe": "Live jazz trio - Outdoor seating",
+  "time_bucket": "Today",
+  "starts_at": "2026-07-15T19:00:00",
+  "lat": 40.0093,
+  "lng": -105.2723
+}
+
+Here is the event info:</div>
+<button onclick="copyPrompt()" style="background:#4F86A6;color:white;border:none;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Copy Prompt</button>
+<span id="copyMsg" style="font-size:11px;color:#2F5D50;margin-left:8px"></span>
+</div>
+<label>Step 2 — Paste Claude's JSON response here</label>
+<textarea id="ezJson" rows="8" style="width:100%;padding:8px;border:1px solid #ddd;font-size:13px;font-family:monospace;resize:vertical" placeholder='Paste the JSON from Claude here...'></textarea>
+<button class="b" style="background:#D9A441;color:#1F2320" onclick="ezUpload()">Upload JSON</button>
+<div id="ezStatus"></div>
+</div>
+<div class="c">
 <h2 style="font-size:16px;margin-bottom:8px">Current Events <span id="cnt" style="font-size:12px;color:#888"></span></h2>
 <div id="list">Connect first...</div>
 </div>
 </div>
 <script>
-var sb=null;
-function msg(id,txt,ok){var e=document.getElementById(id);e.innerHTML=txt;e.className="msg "+(ok?"ok":"er");}
-function doConnect(){
-var u=document.getElementById("url").value.trim();
-var k=document.getElementById("key").value.trim();
-if(!u||!k){msg("cs","Enter URL and key",0);return;}
-try{
-sb=window.supabase.createClient(u,k);
-sb.from("events").select("count").then(function(res){
-if(res.error)throw res.error;
-localStorage.setItem("sb_url",u);localStorage.setItem("sb_key",k);
-msg("cs","Connected!",1);loadEvts();
-}).catch(function(e){msg("cs","Failed: "+e.message,0);});
-}catch(e){msg("cs","Failed: "+e.message,0);}
+var U="https://lknoxozdbkikysxoarzu.supabase.co";
+var KEY="";
+
+function msg(id,txt,ok){
+var e=document.getElementById(id);
+e.textContent=txt;
+e.className="msg "+(ok?"ok":"er");
 }
+
+function api(path,method,body){
+var opts={method:method||"GET",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=representation"}};
+if(body)opts.body=JSON.stringify(body);
+return fetch(U+"/rest/v1/"+path,opts);
+}
+
+function doConnect(){
+KEY=document.getElementById("key").value.trim();
+if(!KEY){msg("cs","Enter your key",false);return;}
+localStorage.setItem("jk",KEY);
+api("events?select=title&limit=1").then(function(r){
+if(!r.ok)throw new Error("Invalid key (status "+r.status+")");
+return r.json();
+}).then(function(){
+msg("cs","Connected!",true);
+loadEvts();
+}).catch(function(e){
+msg("cs",e.message,false);
+});
+}
+
 function addEvt(){
-if(!sb){msg("as","Connect first",0);return;}
+if(!KEY){msg("as","Connect first",false);return;}
 var t=document.getElementById("title").value.trim();
 var l=document.getElementById("loc").value.trim();
 var la=parseFloat(document.getElementById("lat").value);
 var ln=parseFloat(document.getElementById("lng").value);
-if(!t||!l){msg("as","Title and Location required",0);return;}
-if(isNaN(la)||isNaN(ln)){msg("as","Enter coordinates",0);return;}
+if(!t||!l){msg("as","Title and Location required",false);return;}
+if(isNaN(la)||isNaN(ln)){msg("as","Enter coordinates from Google Maps",false);return;}
 var sd=document.getElementById("sd").value;
 var st=document.getElementById("st").value;
-var evt={title:t,category:document.getElementById("cat").value,location:l,
+var evt={
+title:t,
+category:document.getElementById("cat").value,
+location:l,
 vibe:document.getElementById("vibe").value.trim()||null,
 time_bucket:document.getElementById("bucket").value,
 starts_at:sd&&st?new Date(sd+"T"+st).toISOString():null,
-lat:la,lng:ln,is_trending:false};
-sb.from("events").insert(evt).then(function(res){
-if(res.error){msg("as","Error: "+res.error.message,0);return;}
-msg("as",t+" added!",1);
+lat:la,lng:ln,is_trending:false
+};
+api("events","POST",evt).then(function(r){
+if(!r.ok)throw new Error("Failed (status "+r.status+")");
+return r.json();
+}).then(function(){
+msg("as",t+" added!",true);
 document.getElementById("title").value="";
 document.getElementById("loc").value="";
 document.getElementById("vibe").value="";
 document.getElementById("lat").value="";
 document.getElementById("lng").value="";
 loadEvts();
+}).catch(function(e){
+msg("as",e.message,false);
 });
 }
+
 function loadEvts(){
-if(!sb)return;
-sb.from("events").select("*").order("created_at",{ascending:false}).then(function(res){
-if(res.error){document.getElementById("list").textContent="Error: "+res.error.message;return;}
-var data=res.data;
+if(!KEY)return;
+api("events?select=*&order=created_at.desc").then(function(r){
+if(!r.ok)throw new Error("Failed");
+return r.json();
+}).then(function(data){
 document.getElementById("cnt").textContent="("+data.length+")";
-if(!data.length){document.getElementById("list").innerHTML="<p>No events</p>";return;}
+if(!data.length){document.getElementById("list").innerHTML="No events";return;}
 var h="<table><tr><th>Title</th><th>Cat</th><th>Bucket</th><th></th></tr>";
-for(var i=0;i<data.length;i++){var e=data[i];h+="<tr><td>"+e.title+"</td><td>"+e.category+"</td><td>"+e.time_bucket+"</td><td><button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";}
+for(var i=0;i<data.length;i++){
+var e=data[i];
+h+="<tr><td>"+e.title+"</td><td>"+e.category+"</td><td>"+(e.time_bucket||"")+"</td>";
+h+="<td><button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";
+}
 h+="</table>";
 document.getElementById("list").innerHTML=h;
+}).catch(function(e){
+document.getElementById("list").textContent="Error loading";
 });
 }
+
 function delEvt(id){
-if(!confirm("Delete?"))return;
-sb.from("events").delete().eq("id",id).then(function(){loadEvts();});
+if(!confirm("Delete this event?"))return;
+api("events?id=eq."+id,"DELETE").then(function(){loadEvts();});
 }
+
+function copyPrompt(){
+var text=document.getElementById("promptBox").textContent;
+navigator.clipboard.writeText(text).then(function(){
+document.getElementById("copyMsg").textContent="Copied!";
+setTimeout(function(){document.getElementById("copyMsg").textContent="";},2000);
+});
+}
+
+function ezUpload(){
+if(!KEY){msg("ezStatus","Connect to Supabase first",false);return;}
+var raw=document.getElementById("ezJson").value.trim();
+if(!raw){msg("ezStatus","Paste JSON from Claude first",false);return;}
+try{
+var parsed=JSON.parse(raw);
+var events=Array.isArray(parsed)?parsed:[parsed];
+var count=0;
+var total=events.length;
+var upload=function(i){
+if(i>=total){
+msg("ezStatus",count+" of "+total+" events uploaded!",true);
+document.getElementById("ezJson").value="";
+loadEvts();
+return;
+}
+var e=events[i];
+var evt={
+title:e.title||"Untitled",
+category:e.category||"food",
+location:e.location||"Boulder",
+vibe:e.vibe||null,
+time_bucket:e.time_bucket||"Coming Up",
+starts_at:e.starts_at||null,
+lat:e.lat||40.015,
+lng:e.lng||-105.27,
+is_trending:false
+};
+api("events","POST",evt).then(function(r){
+if(r.ok)count++;
+upload(i+1);
+}).catch(function(){upload(i+1);});
+};
+upload(0);
+}catch(err){
+msg("ezStatus","Invalid JSON — make sure you copied Claude's full response",false);
+}
+}
+
 window.onload=function(){
-var u=localStorage.getItem("sb_url");
-var k=localStorage.getItem("sb_key");
-if(u)document.getElementById("url").value=u;
-if(k){document.getElementById("key").value=k;
-if(window.supabase){sb=window.supabase.createClient(u,k);
-sb.from("events").select("count").then(function(res){
-if(!res.error){msg("cs","Connected!",1);loadEvts();}
-});}}
+var k=localStorage.getItem("jk");
+if(k){document.getElementById("key").value=k;KEY=k;
+api("events?select=title&limit=1").then(function(r){
+if(r.ok){msg("cs","Connected!",true);loadEvts();}
+});}
 var d=new Date().toISOString().split("T")[0];
 document.getElementById("sd").value=d;
 };
