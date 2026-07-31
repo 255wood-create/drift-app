@@ -351,7 +351,7 @@ export default function App(){
             </div>
 
             {/* Categories */}
-            <div style={{display:"flex",gap:6,overflowX:"auto",padding:"0 16px 14px",WebkitOverflowScrolling:"touch"}}>
+            <div style={{display:"flex",gap:6,padding:"0 16px 14px",justifyContent:"center"}}>
               {CATEGORIES.map(c=>{const isA=activeCat===c.id;const meta=c.id!=="all"?CAT_META[c.id]:null;return(<button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:"5px 12px",background:isA?(meta?.bg||"rgba(245,243,239,0.9)"):"rgba(245,243,239,0.1)",color:isA?(meta?.color||T.charcoal):"rgba(245,243,239,0.6)",border:`0.5px solid ${isA?(meta?.color||T.fog):"rgba(245,243,239,0.2)"}`,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:isA?700:500,cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap"}}>{c.icon} {c.label}</button>);})}
             </div>
           </header>
