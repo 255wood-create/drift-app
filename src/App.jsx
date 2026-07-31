@@ -38,7 +38,7 @@ async function toggleIntDb(userId, eventId, wasInt){
   else await supabase.from('interested').insert({user_id:userId, event_id:eventId});
 }
 const CATEGORIES=[
-  {id:"all",label:"All",icon:"✦"},{id:"music",label:"Live Music",icon:"♪"},{id:"comedy",label:"Comedy",icon:"◇"},
+  {id:"music",label:"Live Music",icon:"♪"},{id:"comedy",label:"Comedy",icon:"◇"},
   {id:"food",label:"Food",icon:"○"},
 ];
 
@@ -274,7 +274,7 @@ function GeoBanner({geoState,onRequest}){
 export default function App(){
   const[screen,setScreen]=useState("feed");
   const[activeFilter,setFilter]=useState("Today");
-  const[activeCat,setCat]=useState("all");
+  const[activeCat,setCat]=useState("music");
   const[saved,setSaved]=useState(new Set());
   const[interested,setInterested]=useState(new Set());
   const[search,setSearch]=useState("");
