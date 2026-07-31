@@ -76,14 +76,26 @@ function LivePip(){return(<span style={{position:"relative",display:"inline-flex
 
 function TimeBadge({time}){
   const s={Now:{bg:T.amber,color:T.charcoal},Tonight:{bg:T.skyLt,color:T.sky},"This Weekend":{bg:T.pineLt,color:T.pine},Trending:{bg:T.amberLt,color:T.amber}}[time]||{bg:T.stone,color:T.charcoalMute};
-  return(<span style={{display:"inline-flex",alignItems:"center",gap:4,background:s.bg,color:s.color,padding:"1px 7px",fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.05em",textTransform:"uppercase"}}>{time==="Today"&&<LivePip/>}{time}</span>);
+  return(<span style={{display:"inline-flex",alignItems:"center",gap:4,background:s.bg,color:s.color,padding:"1px 7px",fontFamily:"'Inter',sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.05em",textTransform:"uppercase"}}>{time==="Today"&&<LivePip/>}{time}</span>);
 }
 
 function SaveBtn({saved,onToggle}){
   return(<button onClick={e=>{e.stopPropagation();onToggle();}} style={{width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(31,35,32,0.5)",border:"none",cursor:"pointer",fontSize:11,flexShrink:0}}>🔖</button>);
 }
 
-function EventCard({event,saved,interested,onSave,onInterest,index,distMiles}){
+function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,timeBucket}){
+  const meta=CAT_META[event.cat||event.category]||CAT_META.community;
+  const timeStr=event.starts_at?new Date(event.starts_at).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}):"";
+  return(
+    <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",animation:"cardUp .3s ease both",animationDelay:index*30+"ms",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:600,color:T.charcoal,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.title}</div>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.charcoalMute,marginTop:2}}>{event.location}{timeStr?" \u00b7 "+timeStr:""}{distMiles!=null?" \u00b7 "+fmt(distMiles):""}</div>
+      </div>
+      <span style={{fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600,color:meta.color,background:meta.bg,padding:"2px 8px",textTransform:"uppercase",letterSpacing:"0.04em",flexShrink:0,marginLeft:12}}>{meta.label}</span>
+    </div>
+  );
+}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
   return(
     <div style={{background:T.white,boxShadow:`0 2px 12px ${T.shadow}`,overflow:"hidden",animation:`cardUp .35s ease both`,animationDelay:`${index*45}ms`}}>
@@ -95,11 +107,11 @@ function EventCard({event,saved,interested,onSave,onInterest,index,distMiles}){
         <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"8px 14px",display:"flex",alignItems:"flex-end",justifyContent:"space-between"}}>
           <div style={{minWidth:0,flex:1,marginRight:8}}>
             <div style={{display:"flex",gap:5,marginBottom:4,flexWrap:"wrap"}}>
-              <span style={{background:`rgba(${meta.color==="#6B4FA0"?"107,79,160":"143,175,154"},0.25)`,color:meta.color==="#6B4FA0"?"#C4A8F0":T.sage,padding:"1px 6px",fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",border:`0.5px solid rgba(${meta.color==="#6B4FA0"?"107,79,160":"143,175,154"},0.35)`}}>{meta.label}</span>
+              <span style={{background:`rgba(${meta.color==="#6B4FA0"?"107,79,160":"143,175,154"},0.25)`,color:meta.color==="#6B4FA0"?"#C4A8F0":T.sage,padding:"1px 6px",fontFamily:"'Inter',sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",border:`0.5px solid rgba(${meta.color==="#6B4FA0"?"107,79,160":"143,175,154"},0.35)`}}>{meta.label}</span>
               <TimeBadge time={event.time}/>
-              {event.is_trending&&<span style={{background:"rgba(217,164,65,0.2)",color:T.amber,padding:"1px 6px",fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:`0.5px solid rgba(217,164,65,0.35)`}}>↑ Trending</span>}
+              {event.is_trending&&<span style={{background:"rgba(217,164,65,0.2)",color:T.amber,padding:"1px 6px",fontFamily:"'Inter',sans-serif",fontSize:9,fontWeight:700,border:`0.5px solid rgba(217,164,65,0.35)`}}>↑ Trending</span>}
             </div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:800,color:T.fog,letterSpacing:"-0.01em",lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.title}</div>
+            <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:800,color:T.fog,letterSpacing:"-0.01em",lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.title}</div>
           </div>
           <SaveBtn saved={saved} onToggle={onSave}/>
         </div>
@@ -107,10 +119,10 @@ function EventCard({event,saved,interested,onSave,onInterest,index,distMiles}){
       {/* Compact footer */}
       <div style={{padding:"3px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{minWidth:0,flex:1}}>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:T.sage,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>📍 {event.location}{distMiles!=null?` · ${fmt(distMiles)}`:""}</div>
-          {event.vibe&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:T.stone,fontStyle:"italic",marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.vibe}</div>}
+          <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>📍 {event.location}{distMiles!=null?` · ${fmt(distMiles)}`:""}</div>
+          {event.vibe&&<div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.stone,fontStyle:"italic",marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.vibe}</div>}
         </div>
-        <button onClick={e=>{e.stopPropagation();onInterest();}} style={{background:interested?T.amber:T.fog,color:interested?T.charcoal:T.sage,border:`0.5px solid ${interested?T.amber:T.stone}`,padding:"5px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",flexShrink:0,marginLeft:8,whiteSpace:"nowrap"}}>
+        <button onClick={e=>{e.stopPropagation();onInterest();}} style={{background:interested?T.amber:T.fog,color:interested?T.charcoal:T.sage,border:`0.5px solid ${interested?T.amber:T.stone}`,padding:"5px 10px",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",flexShrink:0,marginLeft:8,whiteSpace:"nowrap"}}>
           {interested?"✦ Interested":"✦ Going?"}
         </button>
       </div>
@@ -137,15 +149,15 @@ function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
         </svg>
         {userXY&&(<div style={{position:"absolute",left:`${userXY.x}%`,top:`${userXY.y}%`,transform:"translate(-50%,-50%)",zIndex:20}}><div style={{width:14,height:14,borderRadius:"50%",background:T.sky,border:"3px solid white",boxShadow:`0 0 0 4px ${T.sky}44`}}/></div>)}
         <div style={{position:"absolute",top:16,left:16,background:"rgba(245,243,239,0.95)",padding:"8px 14px",boxShadow:`0 2px 12px ${T.shadow}`}}>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal}}>Boulder, CO</div>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:T.sage,marginTop:1}}>{userLat!=null?"📍 Using your location":`${events.length} events`}</div>
+          <div style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal}}>Boulder, CO</div>
+          <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage,marginTop:1}}>{userLat!=null?"📍 Using your location":`${events.length} events`}</div>
         </div>
         {events.map(evt=>{
           const{x,y}=toXY(evt.lat||40.0150,evt.lng||-105.2705);
           const meta=CAT_META[evt.cat]||CAT_META.community;
           const isSel=selected===evt.id;
           return(<button key={evt.id} onClick={()=>setSelected(isSel?null:evt.id)} style={{position:"absolute",left:`${x}%`,top:`${y}%`,transform:`translate(-50%,-100%) scale(${isSel?1.15:1})`,background:"none",border:"none",cursor:"pointer",transition:"transform .2s",zIndex:isSel?10:5}}>
-            <div style={{background:isSel?meta.color:T.white,color:isSel?T.white:meta.color,padding:isSel?"5px 10px":"4px 9px",fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:800,boxShadow:isSel?`0 4px 16px ${meta.color}55`:`0 2px 8px ${T.shadow}`,border:`1.5px solid ${meta.color}`,display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap"}}>
+            <div style={{background:isSel?meta.color:T.white,color:isSel?T.white:meta.color,padding:isSel?"5px 10px":"4px 9px",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:800,boxShadow:isSel?`0 4px 16px ${meta.color}55`:`0 2px 8px ${T.shadow}`,border:`1.5px solid ${meta.color}`,display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap"}}>
               {isSel&&evt.title.split(" ").slice(0,3).join(" ")}
               {!isSel&&"●"}
             </div>
@@ -158,18 +170,18 @@ function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
           <div style={{width:36,height:3,background:T.stone,margin:"0 auto 14px"}}/>
           <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
             <div style={{flex:1}}>
-              <h3 style={{fontFamily:"'DM Sans',sans-serif",fontSize:15,fontWeight:800,color:T.charcoal,margin:"0 0 4px"}}>{sel.title}</h3>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:T.sage,margin:"0 0 3px"}}>📍 {sel.location}</p>
-              {sel.vibe&&<p style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:T.stone,fontStyle:"italic",margin:0}}>{sel.vibe}</p>}
+              <h3 style={{fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:800,color:T.charcoal,margin:"0 0 4px"}}>{sel.title}</h3>
+              <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,margin:"0 0 3px"}}>📍 {sel.location}</p>
+              {sel.vibe&&<p style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.stone,fontStyle:"italic",margin:0}}>{sel.vibe}</p>}
             </div>
             <SaveBtn saved={saved.has(sel.id)} onToggle={()=>onSave(sel.id)}/>
           </div>
           <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <TimeBadge time={sel.time}/>
-              {sel.distMiles!=null&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:T.amber,fontWeight:600}}>{fmt(sel.distMiles)} away</span>}
+              {sel.distMiles!=null&&<span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.amber,fontWeight:600}}>{fmt(sel.distMiles)} away</span>}
             </div>
-            <button onClick={()=>onInterest(sel.id)} style={{background:interested.has(sel.id)?T.amber:T.fog,color:interested.has(sel.id)?T.charcoal:T.sage,border:`0.5px solid ${interested.has(sel.id)?T.amber:T.stone}`,padding:"6px 14px",fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            <button onClick={()=>onInterest(sel.id)} style={{background:interested.has(sel.id)?T.amber:T.fog,color:interested.has(sel.id)?T.charcoal:T.sage,border:`0.5px solid ${interested.has(sel.id)?T.amber:T.stone}`,padding:"6px 14px",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>
               {interested.has(sel.id)?"✦ Interested":"✦ Going?"}
             </button>
           </div>
@@ -183,13 +195,13 @@ function SavedView({events,saved,interested,onSave,onInterest,userCoords}){
   const sv=events.filter(e=>saved.has(e.id));
   return(
     <div style={{flex:1,overflowY:"auto",padding:"24px 16px 100px"}}>
-      <h2 style={{fontFamily:"'DM Sans',sans-serif",fontSize:22,fontWeight:800,color:T.charcoal,margin:"0 0 4px"}}>Saved</h2>
-      <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:T.sage,margin:"0 0 20px"}}>{sv.length} {sv.length===1?"event":"events"} bookmarked</p>
+      <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:22,fontWeight:800,color:T.charcoal,margin:"0 0 4px"}}>Saved</h2>
+      <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.sage,margin:"0 0 20px"}}>{sv.length} {sv.length===1?"event":"events"} bookmarked</p>
       {sv.length===0?(
         <div style={{textAlign:"center",padding:"60px 20px"}}>
           <div style={{fontSize:40,marginBottom:14}}>🔖</div>
-          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:17,color:T.charcoalMute}}>Nothing saved yet</p>
-          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:T.sage,marginTop:6}}>Tap 🔖 on any event</p>
+          <p style={{fontFamily:"'Inter',sans-serif",fontSize:17,color:T.charcoalMute}}>Nothing saved yet</p>
+          <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.sage,marginTop:6}}>Tap 🔖 on any event</p>
         </div>
       ):(
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -206,47 +218,47 @@ function ProfileView({saved,events,userCoords,geoState}){
     <div style={{flex:1,overflowY:"auto",padding:"0 0 100px"}}>
       <div style={{background:`linear-gradient(160deg,${T.pine} 0%,#1A3830 100%)`,padding:"40px 20px 28px",position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",top:-40,right:-40,width:160,height:160,borderRadius:"50%",background:"rgba(245,243,239,0.05)"}}/>
-        <div style={{width:68,height:68,borderRadius:2,background:"rgba(245,243,239,0.15)",border:"2px solid rgba(245,243,239,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',sans-serif",fontSize:24,fontWeight:800,color:T.fog,marginBottom:14}}>{USER.avatar}</div>
-        <h2 style={{fontFamily:"'DM Sans',sans-serif",fontSize:20,fontWeight:800,color:T.fog,margin:"0 0 2px"}}>{USER.name}</h2>
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"rgba(245,243,239,0.55)",margin:"0 0 8px",letterSpacing:"0.06em"}}>{USER.handle}</p>
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(245,243,239,0.75)",margin:"0 0 2px"}}>
+        <div style={{width:68,height:68,borderRadius:2,background:"rgba(245,243,239,0.15)",border:"2px solid rgba(245,243,239,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter',sans-serif",fontSize:24,fontWeight:800,color:T.fog,marginBottom:14}}>{USER.avatar}</div>
+        <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:20,fontWeight:800,color:T.fog,margin:"0 0 2px"}}>{USER.name}</h2>
+        <p style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(245,243,239,0.55)",margin:"0 0 8px",letterSpacing:"0.06em"}}>{USER.handle}</p>
+        <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"rgba(245,243,239,0.75)",margin:"0 0 2px"}}>
           {geoState==="granted"&&userCoords?`📍 ${userCoords.lat.toFixed(4)}°N · ${Math.abs(userCoords.lng).toFixed(4)}°W`:`📍 ${USER.location}`}
         </p>
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(245,243,239,0.65)",margin:0,fontStyle:"italic"}}>{USER.bio}</p>
+        <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"rgba(245,243,239,0.65)",margin:0,fontStyle:"italic"}}>{USER.bio}</p>
       </div>
       <div style={{padding:"20px 16px"}}>
         <div style={{display:"flex",background:T.white,boxShadow:`0 2px 12px ${T.shadow}`,marginBottom:20,overflow:"hidden"}}>
           {[{label:"Saved",value:saved.size},{label:"Interests",value:USER.interests.length},{label:"Member",value:"'24"}].map((s,i)=>(
             <div key={i} style={{flex:1,textAlign:"center",padding:"14px 8px",borderRight:i<2?`0.5px solid ${T.stone}`:"none"}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:20,fontWeight:800,color:T.charcoal}}>{s.value}</div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:T.sage,textTransform:"uppercase",letterSpacing:"0.08em",marginTop:2}}>{s.label}</div>
+              <div style={{fontFamily:"'Inter',sans-serif",fontSize:20,fontWeight:800,color:T.charcoal}}>{s.value}</div>
+              <div style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:T.sage,textTransform:"uppercase",letterSpacing:"0.08em",marginTop:2}}>{s.label}</div>
             </div>
           ))}
         </div>
         <div style={{background:T.white,padding:"12px 14px",boxShadow:`0 1px 6px ${T.shadow}`,marginBottom:20,display:"flex",alignItems:"center",gap:10}}>
           <span style={{fontSize:18}}>📍</span>
           <div style={{flex:1}}>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:700,color:T.charcoal}}>Location: {geoState==="granted"?"Active ✓":geoState==="denied"?"Denied":geoState==="loading"?"Requesting…":"Not enabled"}</div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:geoState==="granted"?T.pine:T.sage,marginTop:1}}>{geoState==="granted"&&userCoords?"Real GPS · distances are live":"Enable in feed for real distances"}</div>
+            <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:T.charcoal}}>Location: {geoState==="granted"?"Active ✓":geoState==="denied"?"Denied":geoState==="loading"?"Requesting…":"Not enabled"}</div>
+            <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:geoState==="granted"?T.pine:T.sage,marginTop:1}}>{geoState==="granted"&&userCoords?"Real GPS · distances are live":"Enable in feed for real distances"}</div>
           </div>
           <div style={{width:8,height:8,borderRadius:"50%",background:geoState==="granted"?T.pine:geoState==="denied"?T.amber:T.stone,flexShrink:0}}/>
         </div>
-        <h3 style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.06em"}}>My Interests</h3>
+        <h3 style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.06em"}}>My Interests</h3>
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:24}}>
-          {USER.interests.map(int=>{const cat=Object.values(CAT_META).find(m=>m.label.includes(int.split(" ")[0]));return(<span key={int} style={{background:cat?.bg||T.fog,color:cat?.color||T.sage,padding:"5px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:700}}>{int}</span>);})}
+          {USER.interests.map(int=>{const cat=Object.values(CAT_META).find(m=>m.label.includes(int.split(" ")[0]));return(<span key={int} style={{background:cat?.bg||T.fog,color:cat?.color||T.sage,padding:"5px 12px",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>{int}</span>);})}
         </div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <h3 style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal,margin:0,textTransform:"uppercase",letterSpacing:"0.06em"}}>Saved Events</h3>
-          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:T.sage}}>{saved.size} saved</span>
+          <h3 style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal,margin:0,textTransform:"uppercase",letterSpacing:"0.06em"}}>Saved Events</h3>
+          <span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage}}>{saved.size} saved</span>
         </div>
         {sv.length===0?(
-          <div style={{background:T.fog,padding:"18px",textAlign:"center"}}><p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:T.charcoalMute}}>Bookmark events from the feed</p></div>
+          <div style={{background:T.fog,padding:"18px",textAlign:"center"}}><p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.charcoalMute}}>Bookmark events from the feed</p></div>
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {sv.map(e=>(<div key={e.id} style={{background:T.white,padding:"11px 14px",boxShadow:`0 1px 6px ${T.shadow}`,display:"flex",gap:10,alignItems:"center"}}>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:T.charcoal,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{e.title}</div>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:T.sage,marginTop:2}}>{e.location}</div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700,color:T.charcoal,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{e.title}</div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,marginTop:2}}>{e.location}</div>
               </div>
               <TimeBadge time={e.time}/>
             </div>))}
@@ -263,10 +275,10 @@ function GeoBanner({geoState,onRequest}){
     <div style={{margin:"0 0 12px",background:T.white,border:`0.5px solid ${T.stone}`,padding:"10px 14px",display:"flex",alignItems:"center",gap:10,boxShadow:`0 1px 6px ${T.shadow}`}}>
       <span style={{fontSize:18,flexShrink:0}}>📍</span>
       <div style={{flex:1}}>
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:700,color:T.charcoal}}>{geoState==="denied"?"Location access denied":"See real distances from you"}</div>
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:T.sage,marginTop:1}}>{geoState==="denied"?"Update browser settings to allow":"Events sort by how close they are"}</div>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:T.charcoal}}>{geoState==="denied"?"Location access denied":"See real distances from you"}</div>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,marginTop:1}}>{geoState==="denied"?"Update browser settings to allow":"Events sort by how close they are"}</div>
       </div>
-      {geoState!=="denied"&&<button onClick={onRequest} style={{background:T.charcoal,color:T.fog,border:"none",padding:"6px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0}}>Allow</button>}
+      {geoState!=="denied"&&<button onClick={onRequest} style={{background:T.charcoal,color:T.fog,border:"none",padding:"6px 12px",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0}}>Allow</button>}
     </div>
   );
 }
@@ -325,7 +337,7 @@ export default function App(){
   return(
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Caveat:wght@700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Caveat:wght@700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
         html,body,#root{height:100%}
         body{background:#E8E4DF;display:flex;justify-content:center}
@@ -339,43 +351,43 @@ export default function App(){
         input:focus{outline:none}
         button{user-select:none}
       `}</style>
-      <div style={{width:"100%",maxWidth:430,minHeight:"100vh",height:"100%",display:"flex",flexDirection:"column",background:T.fog,fontFamily:"'DM Sans',sans-serif"}}>
+      <div style={{width:"100%",maxWidth:430,minHeight:"100vh",height:"100%",display:"flex",flexDirection:"column",background:T.fog,fontFamily:"'Inter',sans-serif"}}>
 
         {screen==="feed"&&(
           <header style={{position:"sticky",top:0,zIndex:40,background:T.pine,borderBottom:`0.5px solid rgba(245,243,239,0.15)`}}>
             {/* Top row */}
             <div style={{padding:"16px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
               <div>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:24,fontWeight:800,color:T.fog,letterSpacing:"-0.04em",lineHeight:1}}>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:24,fontWeight:800,color:T.fog,letterSpacing:"-0.04em",lineHeight:1}}>
                   <span style={{fontFamily:"'Caveat',cursive",fontSize:30,fontWeight:700,letterSpacing:"-0.01em",lineHeight:1}}>go </span><span style={{letterSpacing:"-0.04em"}}>janey<span style={{color:T.amber}}>.</span></span>
                 </div>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(245,243,239,0.5)",letterSpacing:"0.12em",textTransform:"uppercase",marginTop:3}}>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:"rgba(245,243,239,0.5)",letterSpacing:"0.12em",textTransform:"uppercase",marginTop:3}}>
                   {geoState==="granted"&&userCoords?`📍 ${userCoords.lat.toFixed(3)}°N · ${Math.abs(userCoords.lng).toFixed(3)}°W`:"Boulder, CO"}
                 </div>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,243,239,0.1)",border:"0.5px solid rgba(245,243,239,0.2)",padding:"5px 11px"}}>
                 <LivePip/>
-                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:T.fog,fontWeight:500}}>{liveCount} out now</span>
+                <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.fog,fontWeight:500}}>{liveCount} out now</span>
               </div>
             </div>
 
             {/* Time filters */}
             <div style={{padding:"0 16px 12px",display:"flex",gap:6,justifyContent:"center"}}>
-              {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"4px 9px",background:activeFilter===f?T.amber:"rgba(245,243,239,0.1)",color:activeFilter===f?T.charcoal:"rgba(245,243,239,0.6)",border:"none",fontFamily:"'DM Sans',sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.04em",textTransform:"uppercase",cursor:"pointer",transition:"all .18s"}}>{f}</button>))}
+              {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"4px 9px",background:activeFilter===f?T.amber:"rgba(245,243,239,0.1)",color:activeFilter===f?T.charcoal:"rgba(245,243,239,0.6)",border:"none",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.04em",textTransform:"uppercase",cursor:"pointer",transition:"all .18s"}}>{f}</button>))}
             </div>
 
             {/* Search */}
             <div style={{padding:"0 16px 12px"}}>
               <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(245,243,239,0.1)",border:"0.5px solid rgba(245,243,239,0.2)",padding:"8px 14px"}}>
                 <span style={{color:T.sage,fontSize:13}}>🔍</span>
-                <input placeholder="Search events, venues, vibes…" value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,background:"none",border:"none",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:T.fog}}/>
+                <input placeholder="Search events, venues, vibes…" value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,background:"none",border:"none",fontFamily:"'Inter',sans-serif",fontSize:13,color:T.fog}}/>
                 {search&&<button onClick={()=>setSearch("")} style={{background:"none",border:"none",color:T.sage,cursor:"pointer",fontSize:16,lineHeight:1}}>×</button>}
               </div>
             </div>
 
             {/* Categories */}
             <div style={{display:"flex",gap:6,overflowX:"auto",padding:"0 16px 14px",WebkitOverflowScrolling:"touch"}}>
-              {CATEGORIES.map(c=>{const isA=activeCat===c.id;const meta=c.id!=="all"?CAT_META[c.id]:null;return(<button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:"5px 12px",background:isA?(meta?.bg||"rgba(245,243,239,0.9)"):"rgba(245,243,239,0.1)",color:isA?(meta?.color||T.charcoal):"rgba(245,243,239,0.6)",border:`0.5px solid ${isA?(meta?.color||T.fog):"rgba(245,243,239,0.2)"}`,fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:isA?700:500,cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap"}}>{c.icon} {c.label}</button>);})}
+              {CATEGORIES.map(c=>{const isA=activeCat===c.id;const meta=c.id!=="all"?CAT_META[c.id]:null;return(<button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:"5px 12px",background:isA?(meta?.bg||"rgba(245,243,239,0.9)"):"rgba(245,243,239,0.1)",color:isA?(meta?.color||T.charcoal):"rgba(245,243,239,0.6)",border:`0.5px solid ${isA?(meta?.color||T.fog):"rgba(245,243,239,0.2)"}`,fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:isA?700:500,cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap"}}>{c.icon} {c.label}</button>);})}
             </div>
           </header>
         )}
@@ -383,10 +395,10 @@ export default function App(){
         {screen==="feed"&&(
           <main style={{flex:1,overflowY:"auto",padding:"16px 16px 100px"}}>
             <GeoBanner geoState={geoState} onRequest={requestGeo}/>
-            {dbError&&<div style={{background:"#FEF0E0",padding:"8px 14px",marginBottom:12}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:T.amber}}>Connection issue — showing demo events</span></div>}
+            {dbError&&<div style={{background:"#FEF0E0",padding:"8px 14px",marginBottom:12}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.amber}}>Connection issue — showing demo events</span></div>}
             {!search&&(
               <div style={{marginBottom:14}}>
-                <h2 style={{fontFamily:"'DM Sans',sans-serif",fontSize:19,fontWeight:800,color:T.charcoal,lineHeight:1.2,letterSpacing:"-0.02em"}}>
+                <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:19,fontWeight:800,color:T.charcoal,lineHeight:1.2,letterSpacing:"-0.02em"}}>
                   {activeFilter==="Today"&&"Happening today"}
                   {activeFilter==="Tonight"&&"Going on tonight"}
                   {activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}
@@ -394,7 +406,7 @@ export default function App(){
                   {activeFilter==="Coming Up"&&"Coming up soon"}
                   {activeFilter==="Trending"&&"Trending around town"}
                 </h2>
-                <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:T.sage,marginTop:3}}>
+                <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,marginTop:3}}>
                   {filtered.length} {filtered.length===1?"experience":"experiences"}{userCoords?" · sorted by distance":""}
                 </p>
               </div>
@@ -408,8 +420,8 @@ export default function App(){
             ):(
               <div style={{textAlign:"center",padding:"60px 20px",animation:"fadeIn .4s ease"}}>
                 <div style={{fontSize:40,marginBottom:14}}>🏔️</div>
-                <h3 style={{fontFamily:"'DM Sans',sans-serif",fontSize:18,color:T.charcoalMute,marginBottom:8}}>Nothing here right now</h3>
-                <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:T.sage}}>Try a different filter or category</p>
+                <h3 style={{fontFamily:"'Inter',sans-serif",fontSize:18,color:T.charcoalMute,marginBottom:8}}>Nothing here right now</h3>
+                <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.sage}}>Try a different filter or category</p>
               </div>
             )}
           </main>
@@ -422,7 +434,7 @@ export default function App(){
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
           {NAV.map(n=>{const a=screen===n.id;return(<button key={n.id} onClick={()=>setScreen(n.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
             <span style={{fontSize:19,lineHeight:1,filter:a?`drop-shadow(0 0 4px ${T.pine}88)`:"none",transform:a?"scale(1.1)":"scale(1)",transition:"all .18s"}}>{n.icon}</span>
-            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,letterSpacing:"0.06em",textTransform:"uppercase",color:a?T.pine:T.sage,fontWeight:a?700:400,transition:"color .18s"}}>{n.label}</span>
+            <span style={{fontFamily:"'Inter',sans-serif",fontSize:9,letterSpacing:"0.06em",textTransform:"uppercase",color:a?T.pine:T.sage,fontWeight:a?700:400,transition:"color .18s"}}>{n.label}</span>
           </button>);})}
         </nav>
       </div>
