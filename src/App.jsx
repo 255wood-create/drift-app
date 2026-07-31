@@ -83,18 +83,40 @@ function SaveBtn({saved,onToggle}){
   return(<button onClick={e=>{e.stopPropagation();onToggle();}} style={{width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(31,35,32,0.5)",border:"none",cursor:"pointer",fontSize:11,flexShrink:0}}>🔖</button>);
 }
 
-function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,timeBucket}){
+function EventCard({event,saved,interested,onSave,onInterest,index,distMiles}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
-  const timeStr=event.starts_at?new Date(event.starts_at).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}):"";
   return(
-    <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",animation:"cardUp .3s ease both",animationDelay:index*30+"ms",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:600,color:T.charcoal,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.title}</div>
-        <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.charcoalMute,marginTop:2}}>{event.location}{timeStr?" \u00b7 "+timeStr:""}{distMiles!=null?" \u00b7 "+fmt(distMiles):""}</div>
+    <div style={{background:T.white,boxShadow:`0 2px 12px ${T.shadow}`,overflow:"hidden",animation:`cardUp .35s ease both`,animationDelay:`${index*45}ms`}}>
+      {/* Short photo header */}
+      <div style={{height:80,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0,background:meta.gradBg}}/>
+        <div style={{position:"absolute",inset:0,background:`radial-gradient(ellipse at 40% 20%,${meta.gradAccent} 0%,transparent 60%)`}}/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(31,35,32,0.92) 0%,rgba(31,35,32,0.1) 65%,transparent 100%)"}}/>
+        <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"8px 14px",display:"flex",alignItems:"flex-end",justifyContent:"space-between"}}>
+          <div style={{minWidth:0,flex:1,marginRight:8}}>
+            <div style={{display:"flex",gap:5,marginBottom:4,flexWrap:"wrap"}}>
+              <span style={{background:`rgba(${meta.color==="#6B4FA0"?"107,79,160":"143,175,154"},0.25)`,color:meta.color==="#6B4FA0"?"#C4A8F0":T.sage,padding:"1px 6px",fontFamily:"'Inter',sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",border:`0.5px solid rgba(${meta.color==="#6B4FA0"?"107,79,160":"143,175,154"},0.35)`}}>{meta.label}</span>
+              <TimeBadge time={event.time}/>
+              {event.is_trending&&<span style={{background:"rgba(217,164,65,0.2)",color:T.amber,padding:"1px 6px",fontFamily:"'Inter',sans-serif",fontSize:9,fontWeight:700,border:`0.5px solid rgba(217,164,65,0.35)`}}>↑ Trending</span>}
+            </div>
+            <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:800,color:T.fog,letterSpacing:"-0.01em",lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.title}</div>
+          </div>
+          <SaveBtn saved={saved} onToggle={onSave}/>
+        </div>
       </div>
-      <span style={{fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:600,color:meta.color,background:meta.bg,padding:"2px 8px",textTransform:"uppercase",letterSpacing:"0.04em",flexShrink:0,marginLeft:12}}>{meta.label}</span>
+      {/* Compact footer */}
+      <div style={{padding:"3px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{minWidth:0,flex:1}}>
+          <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>📍 {event.location}{distMiles!=null?` · ${fmt(distMiles)}`:""}</div>
+          {event.vibe&&<div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.stone,fontStyle:"italic",marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{event.vibe}</div>}
+        </div>
+        <button onClick={e=>{e.stopPropagation();onInterest();}} style={{background:interested?T.amber:T.fog,color:interested?T.charcoal:T.sage,border:`0.5px solid ${interested?T.amber:T.stone}`,padding:"5px 10px",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,cursor:"pointer",flexShrink:0,marginLeft:8,whiteSpace:"nowrap"}}>
+          {interested?"✦ Interested":"✦ Going?"}
+        </button>
+      </div>
     </div>
   );
+}
 
 function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
   const[selected,setSelected]=useState(null);
@@ -406,5 +428,4 @@ export default function App(){
       </div>
     </>
   );
-}
 }
