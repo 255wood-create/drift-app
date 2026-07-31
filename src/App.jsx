@@ -254,7 +254,7 @@ export default function App(){
   const[activeCat,setCat]=useState("music");
   const[saved,setSaved]=useState(new Set());
   const[interested,setInterested]=useState(new Set());
-  const[search,setSearch]=useState("");
+  
   const[liveCount,setLiveCount]=useState(214);
   const[geoState,setGeoState]=useState("idle");
   const[userCoords,setUserCoords]=useState(null);
@@ -291,9 +291,9 @@ export default function App(){
 
   const filtered=withDist.filter(e=>{
     if(activeCat!=="all"&&(e.category||"").trim().toLowerCase()!==activeCat)return false;
-        if(!search){if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
-    if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;}
-    if(search&&!e.title.toLowerCase().includes(search.toLowerCase())&&!e.location.toLowerCase().includes(search.toLowerCase())&&!(e.vibe||"").toLowerCase().includes(search.toLowerCase()))return false;
+        if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
+    if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
+    
     return true;
   }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
 
@@ -342,13 +342,6 @@ export default function App(){
             </div>
 
             {/* Search */}
-            <div style={{padding:"0 16px 12px"}}>
-              <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(245,243,239,0.1)",border:"0.5px solid rgba(245,243,239,0.2)",padding:"8px 14px"}}>
-                <span style={{color:T.sage,fontSize:13}}>🔍</span>
-                <input placeholder="Search events, venues, vibes…" value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,background:"none",border:"none",fontFamily:"'Inter',sans-serif",fontSize:13,color:T.fog}}/>
-                {search&&<button onClick={()=>setSearch("")} style={{background:"none",border:"none",color:T.sage,cursor:"pointer",fontSize:16,lineHeight:1}}>×</button>}
-              </div>
-            </div>
 
             {/* Categories */}
             <div style={{display:"flex",gap:6,padding:"0 16px 14px",justifyContent:"center"}}>
@@ -361,7 +354,7 @@ export default function App(){
           <main style={{flex:1,overflowY:"auto",padding:"16px 16px 100px"}}>
             <GeoBanner geoState={geoState} onRequest={requestGeo}/>
             {dbError&&<div style={{background:"#FEF0E0",padding:"8px 14px",marginBottom:12}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.amber}}>Connection issue — showing demo events</span></div>}
-            {!search&&(
+            {(
               <div style={{marginBottom:14}}>
                 <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:19,fontWeight:800,color:T.charcoal,lineHeight:1.2,letterSpacing:"-0.02em"}}>
                   {activeFilter==="Today"&&"Happening today"}
