@@ -352,7 +352,7 @@ export default function App(){
 
         {screen==="feed"&&(
           <main style={{flex:1,overflowY:"auto",padding:"16px 16px 100px"}}>
-            <GeoBanner geoState={geoState} onRequest={requestGeo}/>
+            
             {dbError&&<div style={{background:"#FEF0E0",padding:"8px 14px",marginBottom:12}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.amber}}>Connection issue — showing demo events</span></div>}
             {(
               <div style={{marginBottom:14}}>
