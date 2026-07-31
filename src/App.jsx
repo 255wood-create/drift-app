@@ -38,7 +38,7 @@ async function toggleIntDb(userId, eventId, wasInt){
   else await supabase.from('interested').insert({user_id:userId, event_id:eventId});
 }
 const CATEGORIES=[
-  {id:"all",label:"All",icon:"✦"},{id:"music",label:"Live Music",icon:"♪"},
+  {id:"all",label:"All",icon:"✦"},{id:"music",label:"Live Music",icon:"♪"},{id:"comedy",label:"Comedy",icon:"◇"},
   {id:"food",label:"Food",icon:"○"},
 ];
 
