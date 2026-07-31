@@ -341,10 +341,10 @@ export default function App(){
               </div>
             </div>
             <div style={{position:"relative",padding:"10px 16px",display:"flex",gap:6,justifyContent:"center"}}>
-              {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"4px 9px",background:activeFilter===f?T.amber:"rgba(245,243,239,0.1)",color:activeFilter===f?T.charcoal:"rgba(245,243,239,0.6)",border:"none",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.04em",textTransform:"uppercase",cursor:"pointer",transition:"all .18s"}}>{f}</button>))}
+              {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"4px 9px",background:activeFilter===f?"#FFFFFF":"rgba(245,243,239,0.1)",color:activeFilter===f?"#3D4240":"#3D4240",border:"none",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.04em",textTransform:"uppercase",cursor:"pointer",transition:"all .18s"}}>{f}</button>))}
             </div>
             <div style={{position:"relative",display:"flex",gap:6,padding:"0 16px 12px",justifyContent:"center"}}>
-              {CATEGORIES.map(c=>{const isA=activeCat===c.id;const meta=c.id!=="all"?CAT_META[c.id]:null;return(<button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:"5px 12px",background:isA?(meta?.bg||"rgba(245,243,239,0.9)"):"rgba(245,243,239,0.1)",color:isA?(meta?.color||T.charcoal):"rgba(245,243,239,0.6)",border:"0.5px solid "+(isA?(meta?.color||T.fog):"rgba(245,243,239,0.2)"),fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:isA?700:500,cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap"}}>{c.icon} {c.label}</button>);})}
+              {CATEGORIES.map(c=>{const isA=activeCat===c.id;const meta=c.id!=="all"?CAT_META[c.id]:null;return(<button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:"5px 12px",background:isA?"#FFFFFF":"rgba(245,243,239,0.1)",color:isA?"#3D4240":"#3D4240",border:isA?"0.5px solid #FFFFFF":"0.5px solid rgba(245,243,239,0.2)",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:isA?700:500,cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap"}}>{c.icon} {c.label}</button>);})}
             </div>
           </header>
         )}
