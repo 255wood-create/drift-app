@@ -39,7 +39,7 @@ async function toggleIntDb(userId, eventId, wasInt){
 }
 const CATEGORIES=[
   {id:"all",label:"All",icon:"✦"},{id:"music",label:"Live Music",icon:"♪"},
-  {id:"sports",label:"Sports / Fitness",icon:"◎"},{id:"food",label:"Food / Social",icon:"○"},
+  {id:"food",label:"Food / Social",icon:"○"},
 ];
 
 const CAT_META={
