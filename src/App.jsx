@@ -291,8 +291,8 @@ export default function App(){
 
   const filtered=withDist.filter(e=>{
     if(activeCat!=="all"&&(e.category||"").trim().toLowerCase()!==activeCat)return false;
-        if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
-    if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
+        if(!search){if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
+    if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;}
     if(search&&!e.title.toLowerCase().includes(search.toLowerCase())&&!e.location.toLowerCase().includes(search.toLowerCase())&&!(e.vibe||"").toLowerCase().includes(search.toLowerCase()))return false;
     return true;
   }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
