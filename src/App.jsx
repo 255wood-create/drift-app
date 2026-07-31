@@ -92,7 +92,6 @@ function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,tim
         <div style={{fontFamily:"Inter,sans-serif",fontSize:15,fontWeight:600,color:"#1F2320"}}>{event.title}</div>
         <div style={{fontFamily:"Inter,sans-serif",fontSize:13,color:"#6B706C",marginTop:2}}>{event.location}{timeStr?" · "+timeStr:""}</div>
       </div>
-      <span style={{fontFamily:"Inter,sans-serif",fontSize:10,fontWeight:600,color:meta.color,background:meta.bg,padding:"2px 8px",textTransform:"uppercase",letterSpacing:"0.04em",flexShrink:0,marginLeft:12}}>{meta.label}</span>
     </div>
   );
 }
@@ -359,7 +358,7 @@ export default function App(){
         )}
 
         {screen==="feed"&&(
-          <main style={{flex:1,overflowY:"auto",padding:"16px 0 100px"}}>
+          <main style={{flex:1,overflowY:"auto",padding:"16px 16px 100px"}}>
             <GeoBanner geoState={geoState} onRequest={requestGeo}/>
             {dbError&&<div style={{background:"#FEF0E0",padding:"8px 14px",marginBottom:12}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.amber}}>Connection issue — showing demo events</span></div>}
             {!search&&(
