@@ -85,7 +85,7 @@ function SaveBtn({saved,onToggle}){
 
 function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,timeBucket}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
-  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var mo=d.getUTCMonth()+1;var day=d.getUTCDate();var hr=d.getUTCHours();var mn=d.getUTCMinutes();var ampm=hr>=12?"PM":"AM";hr=hr%12||12;timeStr=mo+"/"+day+" · "+hr+":"+(mn<10?"0":"")+mn+" "+ampm;}
+  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var h=d.getHours();var m=d.getMinutes();timeStr=(d.getMonth()+1)+"/"+d.getDate();if(h!==0||m!==0){timeStr+=" · "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});}}
   return(
     <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{flex:1,minWidth:0}}>
