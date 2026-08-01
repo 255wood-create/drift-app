@@ -25,3 +25,4 @@ dist-ssr
 fetch*.js
 test.js
 run-test.js
+_old/
