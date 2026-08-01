@@ -291,8 +291,8 @@ export default function App(){
 
   const filtered=withDist.filter(e=>{
     if(activeCat!=="all"&&(e.category||"").trim().toLowerCase()!==activeCat)return false;
-        var isWeekend=new Date().getDay()>=5||new Date().getDay()===0;if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
-    if(activeFilter==="This Weekend"&&(e.time_bucket==="Today"||e.time_bucket==="Tonight")&&isWeekend){}else if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
+        var dow=new Date().getDay();var todayIsWeekend=dow>=5||dow===0;var tomorrowIsWeekend=(dow+1)%7>=5||(dow+1)%7===0||dow===5;if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
+    if(activeFilter==="This Weekend"&&(e.time_bucket==="Today"||e.time_bucket==="Tonight")&&todayIsWeekend){}else if(activeFilter==="This Weekend"&&e.time_bucket==="Tomorrow"&&tomorrowIsWeekend){}else if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
     
     return true;
   }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
