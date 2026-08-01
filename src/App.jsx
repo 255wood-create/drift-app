@@ -177,7 +177,37 @@ function SavedView({events,saved,interested,onSave,onInterest,userCoords}){
   );
 }
 
-function ProfileView({saved,events,userCoords,geoState}){
+function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,events}){
+  if(!user){
+    return(
+      <div style={{flex:1,padding:"60px 20px",textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:14}}>&#x1F464;</div>
+        <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:20,fontWeight:600,color:"#1F2320",marginBottom:8}}>Sign in to go janey.</h2>
+        <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:"#6B706C",marginBottom:20}}>Save events and build your profile</p>
+        <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="Your email" type="email" style={{width:"100%",maxWidth:300,padding:"10px 14px",border:"1px solid #D9D6CF",fontFamily:"'Inter',sans-serif",fontSize:14,marginBottom:10}}/>
+        <br/>
+        <button onClick={signIn} style={{background:"#2F5D50",color:"white",border:"none",padding:"10px 24px",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,cursor:"pointer",marginBottom:10}}>Send Sign-In Link</button>
+        {authMsg&&<p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:authMsg.includes("Check")?"#2F5D50":"#D9A441",marginTop:8}}>{authMsg}</p>}
+      </div>
+    );
+  }
+  const sv=events.filter(e=>saved.has(e.id));
+  return(
+    <div style={{flex:1,overflowY:"auto",padding:"30px 20px 100px"}}>
+      <div style={{textAlign:"center",marginBottom:24}}>
+        <div style={{width:60,height:60,background:"#2F5D50",color:"white",fontFamily:"'Inter',sans-serif",fontSize:24,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}>{user.email[0].toUpperCase()}</div>
+        <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:18,fontWeight:600,color:"#1F2320"}}>{user.email}</h2>
+        <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"#6B706C",marginTop:4}}>Boulder, CO</p>
+      </div>
+      <div style={{background:"white",padding:"14px",marginBottom:16,boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,color:"#1F2320",marginBottom:8}}>Saved Events ({sv.length})</div>
+        {sv.length===0?<p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:"#6B706C"}}>No saved events yet</p>:
+        sv.map(e=><div key={e.id} style={{padding:"8px 0",borderBottom:"0.5px solid #E8E4DF",fontFamily:"'Inter',sans-serif",fontSize:13,color:"#1F2320"}}>{e.title}</div>)}
+      </div>
+      <button onClick={signOut} style={{width:"100%",background:"#F5F3EF",border:"1px solid #D9D6CF",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,color:"#6B706C",cursor:"pointer"}}>Sign Out</button>
+    </div>
+  );
+}){
   const sv=events.filter(e=>saved.has(e.id));
   return(
     <div style={{flex:1,overflowY:"auto",padding:"0 0 100px"}}>
@@ -250,6 +280,9 @@ function GeoBanner({geoState,onRequest}){
 
 export default function App(){
   const[screen,setScreen]=useState("feed");
+  const[user,setUser]=useState(null);
+  const[authEmail,setAuthEmail]=useState("");
+  const[authMsg,setAuthMsg]=useState("");
   const[activeFilter,setFilter]=useState("Today");
   const[activeCat,setCat]=useState("music");
   const[saved,setSaved]=useState(new Set());
@@ -275,6 +308,31 @@ export default function App(){
   },[]);
 
   useEffect(()=>{requestGeo();},[]);
+
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data:{session}})=>{
+      setUser(session?.user||null);
+    });
+    const{data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{
+      setUser(session?.user||null);
+    });
+    return()=>subscription.unsubscribe();
+  },[]);
+
+  const signIn=async()=>{
+    if(!authEmail){setAuthMsg("Enter your email");return;}
+    setAuthMsg("Sending...");
+    const{error}=await supabase.auth.signInWithOtp({email:authEmail,options:{emailRedirectTo:window.location.origin}});
+    if(error)setAuthMsg(error.message);
+    else setAuthMsg("Check your email for a sign-in link!");
+  };
+
+  const signOut=async()=>{
+    await supabase.auth.signOut();
+    setUser(null);
+    setSaved(new Set());
+    setInterested(new Set());
+  };
 
   useEffect(()=>{
     if(!SUPABASE_READY)return;
@@ -386,7 +444,7 @@ export default function App(){
 
         {screen==="map"&&<MapView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt} userLat={userCoords?.lat} userLng={userCoords?.lng}/>}
         {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt} userCoords={userCoords}/>}
-        {screen==="profile"&&<ProfileView saved={saved} events={events} userCoords={userCoords} geoState={geoState}/>}
+        {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
           {NAV.map(n=>{const a=screen===n.id;return(<button key={n.id} onClick={()=>setScreen(n.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
