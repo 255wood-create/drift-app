@@ -291,8 +291,8 @@ export default function App(){
 
   const filtered=withDist.filter(e=>{
     if(activeCat!=="all"&&(e.category||"").trim().toLowerCase()!==activeCat)return false;
-        if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
-    if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
+        var isWeekend=new Date().getDay()>=5||new Date().getDay()===0;if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
+    if(activeFilter==="This Weekend"&&(e.time_bucket==="Today"||e.time_bucket==="Tonight")&&isWeekend){}else if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
     
     return true;
   }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
