@@ -333,7 +333,7 @@ export default function App(){
               </div>
               <div style={{position:"absolute",bottom:16,left:16,right:16}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontSize:22,fontWeight:600,color:T.fog,lineHeight:1.2}}>
-                  {activeFilter==="Today"&&"Happening today"}{activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}{activeFilter==="This Weekend"&&"This weekend"}{activeFilter==="Coming Up"&&"Coming up soon"}
+                  {activeFilter==="Today"&&"Happening today"}{activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}{activeFilter==="This Weekend"&&"This weekend"}{activeFilter==="Coming Up"&&"Coming soon"}
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"rgba(245,243,239,0.6)",marginTop:6}}>
                   {filtered.length} {filtered.length===1?"event":"events"} in Boulder
@@ -360,7 +360,7 @@ export default function App(){
                   {activeFilter==="Tonight"&&"Going on tonight"}
                   {activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}
                   {activeFilter==="This Weekend"&&"This weekend in Boulder"}
-                  {activeFilter==="Coming Up"&&"Coming up soon"}
+                  {activeFilter==="Coming Up"&&"Coming soon"}
                   {activeFilter==="Trending"&&"Trending around town"}
                 </h2>
                 <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,marginTop:3}}>
