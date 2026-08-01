@@ -207,64 +207,7 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,e
       <button onClick={signOut} style={{width:"100%",background:"#F5F3EF",border:"1px solid #D9D6CF",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,color:"#6B706C",cursor:"pointer"}}>Sign Out</button>
     </div>
   );
-}){
-  const sv=events.filter(e=>saved.has(e.id));
-  return(
-    <div style={{flex:1,overflowY:"auto",padding:"0 0 100px"}}>
-      <div style={{background:`linear-gradient(160deg,${T.pine} 0%,#1A3830 100%)`,padding:"40px 20px 28px",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:-40,right:-40,width:160,height:160,borderRadius:"50%",background:"rgba(245,243,239,0.05)"}}/>
-        <div style={{width:68,height:68,borderRadius:2,background:"rgba(245,243,239,0.15)",border:"2px solid rgba(245,243,239,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter',sans-serif",fontSize:24,fontWeight:800,color:T.fog,marginBottom:14}}>{USER.avatar}</div>
-        <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:20,fontWeight:800,color:T.fog,margin:"0 0 2px"}}>{USER.name}</h2>
-        <p style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:"rgba(245,243,239,0.55)",margin:"0 0 8px",letterSpacing:"0.06em"}}>{USER.handle}</p>
-        <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"rgba(245,243,239,0.75)",margin:"0 0 2px"}}>
-          {geoState==="granted"&&userCoords?`📍 ${userCoords.lat.toFixed(4)}°N · ${Math.abs(userCoords.lng).toFixed(4)}°W`:`📍 ${USER.location}`}
-        </p>
-        <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"rgba(245,243,239,0.65)",margin:0,fontStyle:"italic"}}>{USER.bio}</p>
-      </div>
-      <div style={{padding:"20px 16px"}}>
-        <div style={{display:"flex",background:T.white,boxShadow:`0 2px 12px ${T.shadow}`,marginBottom:20,overflow:"hidden"}}>
-          {[{label:"Saved",value:saved.size},{label:"Interests",value:USER.interests.length},{label:"Member",value:"'24"}].map((s,i)=>(
-            <div key={i} style={{flex:1,textAlign:"center",padding:"14px 8px",borderRight:i<2?`0.5px solid ${T.stone}`:"none"}}>
-              <div style={{fontFamily:"'Inter',sans-serif",fontSize:20,fontWeight:800,color:T.charcoal}}>{s.value}</div>
-              <div style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:T.sage,textTransform:"uppercase",letterSpacing:"0.08em",marginTop:2}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{background:T.white,padding:"12px 14px",boxShadow:`0 1px 6px ${T.shadow}`,marginBottom:20,display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:18}}>📍</span>
-          <div style={{flex:1}}>
-            <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:T.charcoal}}>Location: {geoState==="granted"?"Active ✓":geoState==="denied"?"Denied":geoState==="loading"?"Requesting…":"Not enabled"}</div>
-            <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:geoState==="granted"?T.pine:T.sage,marginTop:1}}>{geoState==="granted"&&userCoords?"Real GPS · distances are live":"Enable in feed for real distances"}</div>
-          </div>
-          <div style={{width:8,height:8,borderRadius:"50%",background:geoState==="granted"?T.pine:geoState==="denied"?T.amber:T.stone,flexShrink:0}}/>
-        </div>
-        <h3 style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.06em"}}>My Interests</h3>
-        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:24}}>
-          {USER.interests.map(int=>{const cat=Object.values(CAT_META).find(m=>m.label.includes(int.split(" ")[0]));return(<span key={int} style={{background:cat?.bg||T.fog,color:cat?.color||T.sage,padding:"5px 12px",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700}}>{int}</span>);})}
-        </div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <h3 style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal,margin:0,textTransform:"uppercase",letterSpacing:"0.06em"}}>Saved Events</h3>
-          <span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage}}>{saved.size} saved</span>
-        </div>
-        {sv.length===0?(
-          <div style={{background:T.fog,padding:"18px",textAlign:"center"}}><p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.charcoalMute}}>Bookmark events from the feed</p></div>
-        ):(
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {sv.map(e=>(<div key={e.id} style={{background:T.white,padding:"11px 14px",boxShadow:`0 1px 6px ${T.shadow}`,display:"flex",gap:10,alignItems:"center"}}>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:700,color:T.charcoal,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{e.title}</div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,marginTop:2}}>{e.location}</div>
-              </div>
-              <TimeBadge time={e.time}/>
-            </div>))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function GeoBanner({geoState,onRequest}){
+}function GeoBanner({geoState,onRequest}){
   if(geoState==="granted"||geoState==="loading")return null;
   return(
     <div style={{margin:"0 0 12px",background:T.white,border:`0.5px solid ${T.stone}`,padding:"10px 14px",display:"flex",alignItems:"center",gap:10,boxShadow:`0 1px 6px ${T.shadow}`}}>
