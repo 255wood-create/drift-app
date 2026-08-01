@@ -256,8 +256,14 @@ export default function App(){
     supabase.auth.getSession().then(({data:{session}})=>{
       setUser(session?.user||null);
     });
-    const{data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{
+    const{data:{subscription}}=supabase.auth.onAuthStateChange(async(_,session)=>{
       setUser(session?.user||null);
+      if(session?.user){
+        const{data:savedData}=await supabase.from('saved_events').select('event_id').eq('user_id',session.user.id);
+        if(savedData)setSaved(new Set(savedData.map(s=>s.event_id)));
+        const{data:intData}=await supabase.from('interested').select('event_id').eq('user_id',session.user.id);
+        if(intData)setInterested(new Set(intData.map(s=>s.event_id)));
+      }
     });
     return()=>subscription.unsubscribe();
   },[]);
@@ -287,8 +293,8 @@ export default function App(){
 
   const withDist=events.map(e=>({...e,cat:e.cat||e.category,distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
 
-  const toggleSave=async id=>{const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});if(SUPABASE_READY)await toggleSavedDb("demo-user",id,was).catch(console.error);};
-  const toggleInt=async id=>{const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});if(SUPABASE_READY)await toggleIntDb("demo-user",id,was).catch(console.error);};
+  const toggleSave=async id=>{if(!user){setScreen("profile");return;}const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleSavedDb(user.id,id,was).catch(console.error);};
+  const toggleInt=async id=>{if(!user){setScreen("profile");return;}const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleIntDb(user.id,id,was).catch(console.error);};
 
   const filtered=withDist.filter(e=>{
     if(activeCat!=="all"&&(e.category||"").trim().toLowerCase()!==activeCat)return false;
