@@ -85,7 +85,7 @@ function SaveBtn({saved,onToggle}){
 
 function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,timeBucket}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
-  const timeStr=event.starts_at?new Date(event.starts_at).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}):"";
+  const timeStr=event.starts_at?(new Date(event.starts_at).getMonth()+1)+"/"+new Date(event.starts_at).getDate()+" · "+new Date(event.starts_at).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}):"";
   return(
     <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{flex:1,minWidth:0}}>
