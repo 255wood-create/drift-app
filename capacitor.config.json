@@ -1,0 +1,9 @@
+{
+  "appId": "com.gojaney.app",
+  "appName": "go janey.",
+  "webDir": "dist",
+  "backgroundColor": "#F5F3EF",
+  "ios": {
+    "backgroundColor": "#F5F3EF"
+  }
+}
