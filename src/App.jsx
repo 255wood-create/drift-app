@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from '@supabase/supabase-js';
 
 const T = {
@@ -23,6 +23,21 @@ const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL  || "https://lknoxozdbki
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
 const SUPABASE_READY = true;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+const GOOGLE_MAPS_KEY = "AIzaSyA1yS3PDKvTFW5OmPzQHb2JW7AlCRHdSjw";
+
+function loadGoogleMaps(){
+  return new Promise((resolve)=>{
+    if(window.google&&window.google.maps){resolve();return;}
+    const existing=document.getElementById("gmaps-script");
+    if(existing){existing.addEventListener("load",resolve);return;}
+    const script=document.createElement("script");
+    script.id="gmaps-script";
+    script.src=`https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}`;
+    script.async=true;
+    script.onload=resolve;
+    document.head.appendChild(script);
+  });
+}
 
 async function fetchEventsFromDb(){
   const { data, error } = await supabase.from('events').select('*').order('starts_at');
@@ -67,9 +82,6 @@ const MOCK_EVENTS=[
   {id:10,cat:"sports",time:"This Weekend",is_trending:true,title:"Saturday Soccer — Open Run",location:"Valmont Sports Park",vibe:"Co-ed · All skill levels",lat:40.0208,lng:-105.2366},
 ];
 
-const BB={minLat:39.985,maxLat:40.075,minLng:-105.360,maxLng:-105.210};
-function toXY(lat,lng){return{x:((lng-BB.minLng)/(BB.maxLng-BB.minLng))*100,y:((BB.maxLat-lat)/(BB.maxLat-BB.minLat))*100};}
-
 const USER={name:"Jordan Rivera",handle:"@jrivera",location:"Boulder, CO",bio:"Always chasing sunsets and live music 🎸🏔️",interests:["Live Music","Outdoor Activities","Food & Social","Wellness"],avatar:"JR"};
 
 function LivePip(){return(<span style={{position:"relative",display:"inline-flex",width:7,height:7,flexShrink:0}}><span style={{position:"absolute",inset:0,borderRadius:"50%",background:T.amber,opacity:0.4,animation:"pipPing 1.6s cubic-bezier(0,0,.2,1) infinite"}}/><span style={{position:"relative",width:7,height:7,borderRadius:"50%",background:T.amber}}/></span>);}
@@ -98,38 +110,78 @@ function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,tim
 }
 function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
   const[selected,setSelected]=useState(null);
+  const[mapReady,setMapReady]=useState(false);
   const sel=selected?events.find(e=>e.id===selected):null;
-  const userXY=userLat!=null?toXY(userLat,userLng):null;
+  const mapElRef=useRef(null);
+  const mapObjRef=useRef(null);
+  const markersRef=useRef([]);
+  const userMarkerRef=useRef(null);
+
+  useEffect(()=>{
+    let cancelled=false;
+    loadGoogleMaps().then(()=>{
+      if(cancelled||!mapElRef.current)return;
+      mapObjRef.current=new window.google.maps.Map(mapElRef.current,{
+        center:{lat:userLat||40.0150,lng:userLng||-105.2705},
+        zoom:13,
+        disableDefaultUI:true,
+        zoomControl:true,
+        clickableIcons:false,
+      });
+      setMapReady(true);
+    });
+    return()=>{cancelled=true;};
+  },[]);
+
+  useEffect(()=>{
+    if(!mapReady||!mapObjRef.current)return;
+    markersRef.current.forEach(m=>m.setMap(null));
+    markersRef.current=events.map(evt=>{
+      const meta=CAT_META[evt.cat||evt.category]||CAT_META.community;
+      const isSel=selected===evt.id;
+      const marker=new window.google.maps.Marker({
+        position:{lat:evt.lat||40.0150,lng:evt.lng||-105.2705},
+        map:mapObjRef.current,
+        title:evt.title,
+        icon:{
+          path:window.google.maps.SymbolPath.CIRCLE,
+          fillColor:meta.color,
+          fillOpacity:1,
+          strokeColor:"#fff",
+          strokeWeight:2,
+          scale:isSel?10:7,
+        },
+        zIndex:isSel?10:5,
+      });
+      marker.addListener("click",()=>setSelected(prev=>prev===evt.id?null:evt.id));
+      return marker;
+    });
+  },[mapReady,events,selected]);
+
+  useEffect(()=>{
+    if(!mapReady||!mapObjRef.current||userLat==null)return;
+    if(userMarkerRef.current)userMarkerRef.current.setMap(null);
+    userMarkerRef.current=new window.google.maps.Marker({
+      position:{lat:userLat,lng:userLng},
+      map:mapObjRef.current,
+      icon:{
+        path:window.google.maps.SymbolPath.CIRCLE,
+        fillColor:T.sky,
+        fillOpacity:1,
+        strokeColor:"#fff",
+        strokeWeight:3,
+        scale:7,
+      },
+      zIndex:20,
+    });
+  },[mapReady,userLat,userLng]);
+
   return(
     <div style={{flex:1,position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(160deg,#C8D8B8 0%,#B8C8A8 40%,#A8B898 100%)"}}>
-        <svg width="100%" height="100%" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
-          <line x1="200" y1="0" x2="200" y2="600" stroke="white" strokeWidth="5" opacity="0.6"/>
-          <line x1="0" y1="300" x2="400" y2="300" stroke="white" strokeWidth="5" opacity="0.6"/>
-          <line x1="150" y1="0" x2="150" y2="600" stroke="white" strokeWidth="3" opacity="0.4"/>
-          <line x1="250" y1="0" x2="250" y2="600" stroke="white" strokeWidth="3" opacity="0.4"/>
-          <line x1="0" y1="200" x2="400" y2="200" stroke="white" strokeWidth="3" opacity="0.4"/>
-          <line x1="0" y1="400" x2="400" y2="400" stroke="white" strokeWidth="3" opacity="0.4"/>
-          <path d="M0,320 Q80,315 160,325 Q240,335 320,318 Q360,310 400,315" fill="none" stroke="#6BAACC" strokeWidth="4" opacity="0.5"/>
-          <path d="M0,480 L30,440 L60,460 L90,410 L120,390 L140,420 L160,380 L180,400 L200,370 L220,395 L240,375 L260,405 L280,385 L310,430 L340,415 L370,445 L400,430 L400,600 L0,600 Z" fill="#98B888" opacity="0.4"/>
-        </svg>
-        {userXY&&(<div style={{position:"absolute",left:`${userXY.x}%`,top:`${userXY.y}%`,transform:"translate(-50%,-50%)",zIndex:20}}><div style={{width:14,height:14,borderRadius:"50%",background:T.sky,border:"3px solid white",boxShadow:`0 0 0 4px ${T.sky}44`}}/></div>)}
-        <div style={{position:"absolute",top:16,left:16,background:"rgba(245,243,239,0.95)",padding:"8px 14px",boxShadow:`0 2px 12px ${T.shadow}`}}>
-          <div style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal}}>Boulder, CO</div>
-          <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage,marginTop:1}}>{userLat!=null?"📍 Using your location":`${events.length} events`}</div>
-        </div>
-        {events.map(evt=>{
-          const{x,y}=toXY(evt.lat||40.0150,evt.lng||-105.2705);
-          const meta=CAT_META[evt.cat]||CAT_META.community;
-          const isSel=selected===evt.id;
-          return(<button key={evt.id} onClick={()=>setSelected(isSel?null:evt.id)} style={{position:"absolute",left:`${x}%`,top:`${y}%`,transform:`translate(-50%,-100%) scale(${isSel?1.15:1})`,background:"none",border:"none",cursor:"pointer",transition:"transform .2s",zIndex:isSel?10:5}}>
-            <div style={{background:isSel?meta.color:T.white,color:isSel?T.white:meta.color,padding:isSel?"5px 10px":"4px 9px",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:800,boxShadow:isSel?`0 4px 16px ${meta.color}55`:`0 2px 8px ${T.shadow}`,border:`1.5px solid ${meta.color}`,display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap"}}>
-              {isSel&&evt.title.split(" ").slice(0,3).join(" ")}
-              {!isSel&&"●"}
-            </div>
-            <div style={{width:0,height:0,borderLeft:"5px solid transparent",borderRight:"5px solid transparent",borderTop:`7px solid ${isSel?meta.color:T.white}`,margin:"0 auto"}}/>
-          </button>);
-        })}
+      <div ref={mapElRef} style={{position:"absolute",inset:0,background:"#E8E4DF"}}/>
+      <div style={{position:"absolute",top:16,left:16,background:"rgba(245,243,239,0.95)",padding:"8px 14px",boxShadow:`0 2px 12px ${T.shadow}`,zIndex:10}}>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal}}>Boulder, CO</div>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage,marginTop:1}}>{userLat!=null?"📍 Using your location":`${events.length} events`}</div>
       </div>
       {sel&&(
         <div style={{position:"absolute",bottom:0,left:0,right:0,background:T.white,padding:"18px 20px 80px",boxShadow:`0 -4px 32px ${T.shadowMd}`,animation:"slideUp .25s ease",zIndex:20}}>
