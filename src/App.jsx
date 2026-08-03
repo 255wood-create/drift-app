@@ -324,7 +324,7 @@ export default function App(){
         input:focus{outline:none}
         button{user-select:none}
       `}</style>
-      <div style={{width:"100%",maxWidth:430,minHeight:"100vh",height:"100%",display:"flex",flexDirection:"column",background:T.fog,fontFamily:"'Inter',sans-serif"}}>
+      <div style={{width:"100%",maxWidth:430,minHeight:"100vh",height:"100%",display:"flex",flexDirection:"column",background:T.fog,fontFamily:"'Inter',sans-serif",margin:"0 auto"}}>
 
         {screen==="feed"&&(
           <header style={{position:"sticky",top:0,zIndex:40,overflow:"hidden"}}>
