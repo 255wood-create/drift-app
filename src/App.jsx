@@ -1,5 +1,28 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from '@supabase/supabase-js';
+import { LocalNotifications } from '@capacitor/local-notifications';
+
+function notifId(eventId){
+  let h=0;
+  for(let i=0;i<eventId.length;i++){h=(h*31+eventId.charCodeAt(i))|0;}
+  return Math.abs(h)%2147483647;
+}
+async function scheduleReminder(event){
+  if(!event.starts_at)return;
+  const notifyAt=new Date(new Date(event.starts_at).getTime()-3600000);
+  if(notifyAt<=new Date())return;
+  try{
+    const perm=await LocalNotifications.checkPermissions();
+    if(perm.display!=="granted"){
+      const req=await LocalNotifications.requestPermissions();
+      if(req.display!=="granted")return;
+    }
+    await LocalNotifications.schedule({notifications:[{id:notifId(event.id),title:"Starting soon: "+event.title,body:(event.location||"go janey.")+" — starts in 1 hour",schedule:{at:notifyAt}}]});
+  }catch(e){console.error("notif schedule failed",e);}
+}
+async function cancelReminder(eventId){
+  try{await LocalNotifications.cancel({notifications:[{id:notifId(eventId)}]});}catch(e){console.error("notif cancel failed",e);}
+}
 
 const T = {
   fog:"#F5F3EF",stone:"#D9D6CF",stoneDark:"#B8B4AC",
@@ -348,7 +371,7 @@ export default function App(){
 
   const withDist=events.map(e=>({...e,cat:e.cat||e.category,distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
 
-  const toggleSave=async id=>{if(!user){setScreen("profile");return;}const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleSavedDb(user.id,id,was).catch(console.error);};
+  const toggleSave=async id=>{if(!user){setScreen("profile");return;}const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleSavedDb(user.id,id,was).catch(console.error);if(was){cancelReminder(id);}else{const ev=events.find(e=>e.id===id);if(ev)scheduleReminder(ev);}};
   const toggleInt=async id=>{if(!user){setScreen("profile");return;}const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleIntDb(user.id,id,was).catch(console.error);};
 
   const filtered=withDist.filter(e=>{
