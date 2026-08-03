@@ -101,6 +101,10 @@ Here is the event info:</div>
 <div id="ezStatus"></div>
 </div>
 <div class="c">
+<h2 style="font-size:16px;margin-bottom:8px">Pending Submissions <span id="subCnt" style="font-size:12px;color:#888"></span></h2>
+<div id="subList">Connect first...</div>
+</div>
+<div class="c">
 <h2 style="font-size:16px;margin-bottom:8px">Current Events <span id="cnt" style="font-size:12px;color:#888"></span></h2>
 <div id="list">Connect first...</div>
 </div>
@@ -132,6 +136,7 @@ return r.json();
 }).then(function(){
 msg("cs","Connected!",true);
 loadEvts();
+loadSubmissions();
 }).catch(function(e){
 msg("cs",e.message,false);
 });
@@ -190,6 +195,56 @@ h+="</table>";
 document.getElementById("list").innerHTML=h;
 }).catch(function(e){
 document.getElementById("list").textContent="Error loading";
+});
+}
+
+var pendingSubs={};
+function loadSubmissions(){
+if(!KEY)return;
+api("submissions?select=*&status=eq.pending&order=created_at.desc").then(function(r){
+if(!r.ok)throw new Error("Failed");
+return r.json();
+}).then(function(data){
+pendingSubs={};
+document.getElementById("subCnt").textContent="("+data.length+")";
+if(!data.length){document.getElementById("subList").innerHTML="No pending submissions";return;}
+var h="";
+for(var i=0;i<data.length;i++){
+var s=data[i];
+pendingSubs[s.id]=s;
+h+="<div style='padding:10px 0;border-bottom:1px solid #f0f0f0'>";
+h+="<div style='font-weight:700;font-size:13px'>"+s.title+"</div>";
+h+="<div style='font-size:12px;color:#666;margin-top:2px'>"+s.category+" · "+s.location+(s.starts_at?" · "+new Date(s.starts_at).toLocaleString():"")+"</div>";
+if(s.vibe)h+="<div style='font-size:12px;color:#888;margin-top:2px;font-style:italic'>"+s.vibe+"</div>";
+if(s.submitter_name||s.submitter_email)h+="<div style='font-size:11px;color:#999;margin-top:2px'>Submitted by "+(s.submitter_name||"anonymous")+(s.submitter_email?" ("+s.submitter_email+")":"")+"</div>";
+h+="<div style='margin-top:6px'><button class=b style='width:auto;display:inline-block;padding:5px 12px;font-size:12px;background:#2F5D50;color:white;margin-top:0' onclick=\"approveSub('"+s.id+"')\">Approve</button> ";
+h+="<button class=del style='margin-left:6px' onclick=\"rejectSub('"+s.id+"')\">Reject</button></div>";
+h+="</div>";
+}
+document.getElementById("subList").innerHTML=h;
+}).catch(function(e){
+document.getElementById("subList").textContent="Error loading";
+});
+}
+
+function approveSub(id){
+var s=pendingSubs[id];
+if(!s)return;
+var evt={title:s.title,category:s.category,location:s.location,vibe:s.vibe,time_bucket:s.time_bucket,starts_at:s.starts_at,lat:s.lat,lng:s.lng,is_trending:false};
+api("events","POST",evt).then(function(r){
+if(!r.ok)throw new Error("Failed to add event");
+return api("submissions?id=eq."+id,"DELETE");
+}).then(function(){
+loadSubmissions();
+loadEvts();
+}).catch(function(e){
+msg("subList",e.message,false);
+});
+}
+
+function rejectSub(id){
+api("submissions?id=eq."+id,"DELETE").then(function(){
+loadSubmissions();
 });
 }
 
@@ -257,7 +312,7 @@ window.onload=function(){
 var k=localStorage.getItem("jk")||DEFAULT_KEY;
 document.getElementById("key").value=k;KEY=k;
 api("events?select=title&limit=1").then(function(r){
-if(r.ok){msg("cs","Connected!",true);loadEvts();}
+if(r.ok){msg("cs","Connected!",true);loadEvts();loadSubmissions();}
 else{msg("cs","Auto-connect failed (status "+r.status+") — click Connect to retry",false);}
 });
 var d=new Date().toISOString().split("T")[0];

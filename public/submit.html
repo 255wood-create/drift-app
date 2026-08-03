@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Submit an Event — go janey.</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F5F3EF;font-family:system-ui;color:#1F2320;padding:20px}
+.w{max-width:480px;margin:0 auto}
+h1{font-size:22px;font-weight:800;margin-bottom:4px}
+p.sub{font-size:13px;color:#6B706C;margin-bottom:20px}
+.c{background:white;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+label{display:block;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:10px 0 4px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;padding:8px;border:1px solid #ddd;font-size:14px;font-family:inherit}
+textarea{resize:vertical;min-height:60px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#2F5D50}
+.r{display:flex;gap:10px}
+.r>*{flex:1}
+.b{padding:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:16px}
+.bg{background:#2F5D50;color:white}
+.msg{padding:8px;margin-top:8px;font-size:13px}
+.ok{background:#E8F0EC;color:#2F5D50}
+.er{background:#FEF0E0;color:#D9A441}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>go janey. — Submit an Event</h1>
+<p class="sub">Know about something happening in Boulder and the surrounding area? Submit it here — we'll review it and add it to the app.</p>
+<div class="c">
+<label>Event Name</label>
+<input id="title" placeholder="e.g. Open Mic Night"/>
+<label>Category</label>
+<select id="cat"><option value="music">Live Music</option><option value="comedy">Comedy</option><option value="food">Food</option></select>
+<label>Venue / Location</label>
+<input id="loc" placeholder="e.g. The Sink - The Hill"/>
+<div class="r">
+<div><label>Date</label><input id="sd" type="date"/></div>
+<div><label>Time</label><input id="st" type="time" value="18:00"/></div>
+</div>
+<label>Description (optional)</label>
+<textarea id="vibe" placeholder="Anything else people should know?"></textarea>
+<label>Your Name (optional)</label>
+<input id="sname" placeholder="So we can credit or follow up with you"/>
+<label>Your Email (optional)</label>
+<input id="semail" type="email" placeholder="In case we have questions"/>
+<button class="b bg" onclick="submitEvt()">Submit Event</button>
+<div id="ms"></div>
+</div>
+</div>
+<script>
+var U="https://lknoxozdbkikysxoarzu.supabase.co";
+var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
+
+function msg(txt,ok){
+var e=document.getElementById("ms");
+e.textContent=txt;
+e.className="msg "+(ok?"ok":"er");
+}
+
+function getBucket(sd){
+if(!sd)return"Upcoming";
+var diff=Math.floor((new Date(sd+"T00:00:00")-new Date(new Date().toDateString()))/86400000);
+if(diff<=0)return"Today";
+if(diff===1)return"Tomorrow";
+if(diff<=6)return"This Weekend";
+return"Upcoming";
+}
+
+function submitEvt(){
+var t=document.getElementById("title").value.trim();
+var l=document.getElementById("loc").value.trim();
+if(!t||!l){msg("Event name and location are required",false);return;}
+var sd=document.getElementById("sd").value;
+var st=document.getElementById("st").value;
+var sub={
+title:t,
+category:document.getElementById("cat").value,
+location:l,
+vibe:document.getElementById("vibe").value.trim()||null,
+time_bucket:getBucket(sd),
+starts_at:sd&&st?new Date(sd+"T"+st).toISOString():null,
+lat:40.015,lng:-105.27,
+submitter_name:document.getElementById("sname").value.trim()||null,
+submitter_email:document.getElementById("semail").value.trim()||null,
+status:"pending"
+};
+fetch(U+"/rest/v1/submissions",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(sub)}).then(function(r){
+if(!r.ok)throw new Error("Submission failed — please try again");
+msg("Thanks! Your event has been submitted for review.",true);
+document.getElementById("title").value="";
+document.getElementById("loc").value="";
+document.getElementById("vibe").value="";
+document.getElementById("sname").value="";
+document.getElementById("semail").value="";
+}).catch(function(e){msg(e.message,false);});
+}
+</script>
+</body>
+</html>

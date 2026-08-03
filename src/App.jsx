@@ -241,6 +241,7 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,e
         <br/>
         <button onClick={signIn} style={{background:"#2F5D50",color:"white",border:"none",padding:"10px 24px",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,cursor:"pointer",marginBottom:10}}>Send Sign-In Link</button>
         {authMsg&&<p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:authMsg.includes("Check")?"#2F5D50":"#D9A441",marginTop:8}}>{authMsg}</p>}
+        <a href="/submit.html" style={{display:"block",marginTop:28,fontFamily:"'Inter',sans-serif",fontSize:13,color:"#2F5D50",fontWeight:600,textDecoration:"none"}}>Know about an event? Submit one →</a>
       </div>
     );
   }
@@ -257,6 +258,7 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,e
         {sv.length===0?<p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:"#6B706C"}}>No saved events yet</p>:
         sv.map(e=><div key={e.id} style={{padding:"8px 0",borderBottom:"0.5px solid #E8E4DF",fontFamily:"'Inter',sans-serif",fontSize:13,color:"#1F2320"}}>{e.title}</div>)}
       </div>
+      <a href="/submit.html" style={{display:"block",width:"100%",boxSizing:"border-box",background:"#2F5D50",color:"white",border:"none",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,textAlign:"center",textDecoration:"none",marginBottom:10}}>Submit an Event</a>
       <button onClick={signOut} style={{width:"100%",background:"#F5F3EF",border:"1px solid #D9D6CF",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,color:"#6B706C",cursor:"pointer"}}>Sign Out</button>
     </div>
   );
