@@ -213,16 +213,23 @@ if(!raw){msg("ezStatus","Paste JSON from Claude first",false);return;}
 try{
 var parsed=JSON.parse(raw);
 var events=Array.isArray(parsed)?parsed:[parsed];
-var count=0;
+msg("ezStatus","Checking for duplicates...",true);
+api("events?select=title,starts_at").then(function(r){return r.json();}).then(function(existing){
+var seen={};
+existing.forEach(function(e){seen[(e.title||"").toLowerCase().trim()+"|"+(e.starts_at||"")]=true;});
+var count=0,skipped=0;
 var total=events.length;
 var upload=function(i){
 if(i>=total){
-msg("ezStatus",count+" of "+total+" events uploaded!",true);
+msg("ezStatus",count+" of "+total+" events uploaded"+(skipped?" ("+skipped+" duplicate"+(skipped===1?"":"s")+" skipped)":"")+"!",true);
 document.getElementById("ezJson").value="";
 loadEvts();
 return;
 }
 var e=events[i];
+var dupKey=(e.title||"").toLowerCase().trim()+"|"+(e.starts_at||"");
+if(seen[dupKey]){skipped++;upload(i+1);return;}
+seen[dupKey]=true;
 var evt={
 title:e.title||"Untitled",
 category:e.category||"food",
@@ -240,6 +247,7 @@ upload(i+1);
 }).catch(function(){upload(i+1);});
 };
 upload(0);
+});
 }catch(err){
 msg("ezStatus","Invalid JSON — make sure you copied Claude's full response",false);
 }
