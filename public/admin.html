@@ -107,6 +107,7 @@ Here is the event info:</div>
 </div>
 <script>
 var U="https://lknoxozdbkikysxoarzu.supabase.co";
+var DEFAULT_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
 var KEY="";
 
 function msg(id,txt,ok){
@@ -245,11 +246,12 @@ msg("ezStatus","Invalid JSON — make sure you copied Claude's full response",fa
 }
 
 window.onload=function(){
-var k=localStorage.getItem("jk");
-if(k){document.getElementById("key").value=k;KEY=k;
+var k=localStorage.getItem("jk")||DEFAULT_KEY;
+document.getElementById("key").value=k;KEY=k;
 api("events?select=title&limit=1").then(function(r){
 if(r.ok){msg("cs","Connected!",true);loadEvts();}
-});}
+else{msg("cs","Auto-connect failed (status "+r.status+") — click Connect to retry",false);}
+});
 var d=new Date().toISOString().split("T")[0];
 document.getElementById("sd").value=d;
 };
