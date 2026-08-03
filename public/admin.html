@@ -44,7 +44,7 @@ td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 <div><label>Category</label>
 <select id="cat"><option value="music">Live Music</option><option value="comedy">Comedy</option><option value="food">Food</option></select></div>
 <div><label>Time Bucket</label>
-<select id="bucket"><option value="Today">Today</option><option value="Tomorrow">Tomorrow</option><option value="This Weekend">This Weekend</option><option value="Coming Up">Coming Up</option></select></div>
+<select id="bucket"><option value="Today">Today</option><option value="Tomorrow">Tomorrow</option><option value="This Weekend">This Weekend</option><option value="Upcoming">Upcoming</option></select></div>
 </div>
 <label>Location</label>
 <input id="loc" placeholder="Venue - Neighborhood"/>
@@ -74,8 +74,8 @@ Fields:
 - category: must be "music", "comedy", or "food"
 - location: venue and neighborhood, e.g. "The Sink - The Hill"
 - vibe: short description, max 80 chars (optional)
-- time_bucket: must be "Today", "Tomorrow", "This Weekend", or "Coming Up"
-- starts_at: ISO format e.g. "2026-07-15T19:00:00" (optional)
+- time_bucket: must be "Today", "Tomorrow", "This Weekend", or "Upcoming"
+- starts_at: ISO format WITH Mountain Time offset, e.g. "2026-07-15T19:00:00-06:00" (MDT, use -07:00 for MST in winter) (optional)
 - lat: latitude number (look up on Google Maps)
 - lng: longitude number (look up on Google Maps)
 
@@ -228,7 +228,7 @@ title:e.title||"Untitled",
 category:e.category||"food",
 location:e.location||"Boulder",
 vibe:e.vibe||null,
-time_bucket:e.time_bucket||"Coming Up",
+time_bucket:e.time_bucket||"Upcoming",
 starts_at:e.starts_at||null,
 lat:e.lat||40.015,
 lng:e.lng||-105.27,
