@@ -37,7 +37,7 @@ td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 <div id="cs"></div>
 </div>
 <div class="c">
-<h2 style="font-size:16px;margin-bottom:8px">Add Event</h2>
+<h2 style="font-size:16px;margin-bottom:8px" id="formTitle">Add Event</h2>
 <label>Title</label>
 <input id="title" placeholder="Event name"/>
 <div class="r">
@@ -59,8 +59,15 @@ td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 <div><label>Longitude</label><input id="lng" type="number" step="0.0001" placeholder="-105.2723"/></div>
 </div>
 <p style="font-size:11px;color:#4F86A6;margin-top:6px">Google Maps - click near venue - copy two numbers</p>
-<button class="b bg" onclick="addEvt()">Add Event</button>
+<button class="b bg" id="addBtn" onclick="addEvt()">Add Event</button>
+<button class="b" id="cancelEditBtn" style="display:none;background:#eee;color:#333" onclick="cancelEdit()">Cancel Edit</button>
 <div id="as"></div>
+</div>
+<div class="c">
+<h2 style="font-size:16px;margin-bottom:8px">Fetch New Events</h2>
+<p style="font-size:13px;color:#666;margin-bottom:12px">Manually pull new events from Google right now — the same search that runs automatically at 12:01am and 6am.</p>
+<button class="b bg" id="fetchBtn" onclick="runFetchNow()">Fetch New Events</button>
+<div id="fetchStatus"></div>
 </div>
 <div class="c">
 <h2 style="font-size:16px;margin-bottom:8px">EZ Upload</h2>
@@ -142,6 +149,52 @@ msg("cs",e.message,false);
 });
 }
 
+var editingId=null;
+
+function localDateTimeParts(iso){
+if(!iso)return{d:"",t:"18:00"};
+var dt=new Date(iso);
+var pad=function(n){return(n<10?"0":"")+n;};
+return{
+d:dt.getFullYear()+"-"+pad(dt.getMonth()+1)+"-"+pad(dt.getDate()),
+t:pad(dt.getHours())+":"+pad(dt.getMinutes())
+};
+}
+
+function editEvt(id){
+var e=allEvts[id];
+if(!e)return;
+editingId=id;
+document.getElementById("title").value=e.title||"";
+document.getElementById("cat").value=e.category||"music";
+document.getElementById("bucket").value=e.time_bucket||"Today";
+document.getElementById("loc").value=e.location||"";
+document.getElementById("vibe").value=e.vibe||"";
+var parts=localDateTimeParts(e.starts_at);
+document.getElementById("sd").value=parts.d;
+document.getElementById("st").value=parts.t;
+document.getElementById("lat").value=e.lat!=null?e.lat:"";
+document.getElementById("lng").value=e.lng!=null?e.lng:"";
+document.getElementById("formTitle").textContent="Edit Event";
+document.getElementById("addBtn").textContent="Save Changes";
+document.getElementById("cancelEditBtn").style.display="block";
+document.getElementById("as").textContent="";
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function cancelEdit(){
+editingId=null;
+document.getElementById("title").value="";
+document.getElementById("loc").value="";
+document.getElementById("vibe").value="";
+document.getElementById("lat").value="";
+document.getElementById("lng").value="";
+document.getElementById("formTitle").textContent="Add Event";
+document.getElementById("addBtn").textContent="Add Event";
+document.getElementById("cancelEditBtn").style.display="none";
+document.getElementById("as").textContent="";
+}
+
 function addEvt(){
 if(!KEY){msg("as","Connect first",false);return;}
 var t=document.getElementById("title").value.trim();
@@ -161,22 +214,49 @@ time_bucket:document.getElementById("bucket").value,
 starts_at:sd&&st?new Date(sd+"T"+st).toISOString():null,
 lat:la,lng:ln,is_trending:false
 };
-api("events","POST",evt).then(function(r){
+var isEdit=!!editingId;
+var req=isEdit?api("events?id=eq."+editingId,"PATCH",evt):api("events","POST",evt);
+req.then(function(r){
 if(!r.ok)throw new Error("Failed (status "+r.status+")");
 return r.json();
 }).then(function(){
-msg("as",t+" added!",true);
+msg("as",t+(isEdit?" updated!":" added!"),true);
+if(isEdit){
+cancelEdit();
+}else{
 document.getElementById("title").value="";
 document.getElementById("loc").value="";
 document.getElementById("vibe").value="";
 document.getElementById("lat").value="";
 document.getElementById("lng").value="";
+}
 loadEvts();
 }).catch(function(e){
 msg("as",e.message,false);
 });
 }
 
+function runFetchNow(){
+var btn=document.getElementById("fetchBtn");
+btn.disabled=true;
+btn.textContent="Searching... (can take up to a minute)";
+msg("fetchStatus","Searching for new events...",true);
+fetch("/api/pull-events",{method:"POST"}).then(function(r){
+return r.json().then(function(d){return{ok:r.ok,d:d};});
+}).then(function(res){
+btn.disabled=false;
+btn.textContent="Fetch New Events";
+if(!res.ok){msg("fetchStatus","Error: "+(res.d.error||"failed"),false);return;}
+msg("fetchStatus","Added "+res.d.added+" new events ("+res.d.skipped+" duplicates, "+res.d.junk+" filtered out)",true);
+loadEvts();
+}).catch(function(e){
+btn.disabled=false;
+btn.textContent="Fetch New Events";
+msg("fetchStatus","Error: "+e.message,false);
+});
+}
+
+var allEvts={};
 function loadEvts(){
 if(!KEY)return;
 api("events?select=*&order=created_at.desc").then(function(r){
@@ -184,12 +264,15 @@ if(!r.ok)throw new Error("Failed");
 return r.json();
 }).then(function(data){
 document.getElementById("cnt").textContent="("+data.length+")";
+allEvts={};
 if(!data.length){document.getElementById("list").innerHTML="No events";return;}
-var h="<table><tr><th>Title</th><th>Cat</th><th>Bucket</th><th></th></tr>";
+var h="<table><tr><th>Title</th><th>Cat</th><th>Bucket</th><th>When</th><th></th></tr>";
 for(var i=0;i<data.length;i++){
 var e=data[i];
+allEvts[e.id]=e;
 h+="<tr><td>"+e.title+"</td><td>"+e.category+"</td><td>"+(e.time_bucket||"")+"</td>";
-h+="<td><button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";
+h+="<td>"+(e.starts_at?new Date(e.starts_at).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"—")+"</td>";
+h+="<td><button class=del style='background:#E8F0EC;color:#2F5D50' onclick=\"editEvt('"+e.id+"')\">Edit</button> <button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";
 }
 h+="</table>";
 document.getElementById("list").innerHTML=h;

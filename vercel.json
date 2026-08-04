@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/pull-events.js": {
+      "maxDuration": 60
+    }
+  }
+}
