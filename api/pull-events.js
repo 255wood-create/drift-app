@@ -8,12 +8,21 @@ export default async function handler(req, res) {
     return;
   }
 
-  const serpApiKey = process.env.SERPAPI_KEY;
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_ANON_KEY;
+  const serpApiKey = (process.env.SERPAPI_KEY || "").trim();
+  const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
+  const supabaseKey = (process.env.SUPABASE_ANON_KEY || "").trim();
   if (!serpApiKey || !supabaseUrl || !supabaseKey) {
     res.status(500).json({ error: "Missing SERPAPI_KEY, SUPABASE_URL, or SUPABASE_ANON_KEY env var on Vercel" });
     return;
+  }
+
+  for (const [name, val] of [["SERPAPI_KEY", serpApiKey], ["SUPABASE_URL", supabaseUrl], ["SUPABASE_ANON_KEY", supabaseKey]]) {
+    for (let i = 0; i < val.length; i++) {
+      if (val.charCodeAt(i) > 255) {
+        res.status(500).json({ error: `${name} has an invalid character at position ${i} (code ${val.charCodeAt(i)}) — likely a bad copy-paste. Re-copy it from a plain text source and re-save it in Vercel.` });
+        return;
+      }
+    }
   }
 
   try {
