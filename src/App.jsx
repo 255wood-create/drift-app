@@ -1,36 +1,27 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from '@supabase/supabase-js';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 function notifId(eventId){
   let h=0;
   for(let i=0;i<eventId.length;i++){h=(h*31+eventId.charCodeAt(i))|0;}
   return Math.abs(h)%2147483647;
 }
-async function getLocalNotifications(){
-  try{
-    const mod=await import('@capacitor/local-notifications');
-    return mod.LocalNotifications;
-  }catch(e){console.error("LocalNotifications plugin unavailable",e);return null;}
-}
 async function scheduleReminder(event){
   if(!event.starts_at)return;
   const notifyAt=new Date(new Date(event.starts_at).getTime()-3600000);
   if(notifyAt<=new Date())return;
-  const LN=await getLocalNotifications();
-  if(!LN)return;
   try{
-    const perm=await LN.checkPermissions();
+    const perm=await LocalNotifications.checkPermissions();
     if(perm.display!=="granted"){
-      const req=await LN.requestPermissions();
+      const req=await LocalNotifications.requestPermissions();
       if(req.display!=="granted")return;
     }
-    await LN.schedule({notifications:[{id:notifId(event.id),title:"Starting soon: "+event.title,body:(event.location||"go janey.")+" — starts in 1 hour",schedule:{at:notifyAt}}]});
+    await LocalNotifications.schedule({notifications:[{id:notifId(event.id),title:"Starting soon: "+event.title,body:(event.location||"go janey.")+" — starts in 1 hour",schedule:{at:notifyAt}}]});
   }catch(e){console.error("notif schedule failed",e);}
 }
 async function cancelReminder(eventId){
-  const LN=await getLocalNotifications();
-  if(!LN)return;
-  try{await LN.cancel({notifications:[{id:notifId(eventId)}]});}catch(e){console.error("notif cancel failed",e);}
+  try{await LocalNotifications.cancel({notifications:[{id:notifId(eventId)}]});}catch(e){console.error("notif cancel failed",e);}
 }
 
 const T = {
