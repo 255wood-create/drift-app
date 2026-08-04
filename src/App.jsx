@@ -393,7 +393,7 @@ export default function App(){
     return true;
   }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
 
-  const NAV=[{id:"feed",icon:"⚡",label:"Discover"},{id:"map",icon:"◎",label:"Map"},{id:"saved",icon:"🔖",label:"Saved"},{id:"profile",icon:"◈",label:"Profile"},{id:"refresh",icon:"↻",label:"Refresh"}];
+  const NAV=[{id:"feed",icon:"⚡",label:"Discover"},{id:"map",icon:"◎",label:"Map"},{id:"saved",icon:"♥",label:"Saved"},{id:"profile",icon:"👤",label:"Profile"},{id:"refresh",icon:"↻",label:"Refresh"}];
 
   return(
     <>
