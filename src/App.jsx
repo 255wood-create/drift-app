@@ -1,27 +1,36 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from '@supabase/supabase-js';
-import { LocalNotifications } from '@capacitor/local-notifications';
 
 function notifId(eventId){
   let h=0;
   for(let i=0;i<eventId.length;i++){h=(h*31+eventId.charCodeAt(i))|0;}
   return Math.abs(h)%2147483647;
 }
+async function getLocalNotifications(){
+  try{
+    const mod=await import('@capacitor/local-notifications');
+    return mod.LocalNotifications;
+  }catch(e){console.error("LocalNotifications plugin unavailable",e);return null;}
+}
 async function scheduleReminder(event){
   if(!event.starts_at)return;
   const notifyAt=new Date(new Date(event.starts_at).getTime()-3600000);
   if(notifyAt<=new Date())return;
+  const LN=await getLocalNotifications();
+  if(!LN)return;
   try{
-    const perm=await LocalNotifications.checkPermissions();
+    const perm=await LN.checkPermissions();
     if(perm.display!=="granted"){
-      const req=await LocalNotifications.requestPermissions();
+      const req=await LN.requestPermissions();
       if(req.display!=="granted")return;
     }
-    await LocalNotifications.schedule({notifications:[{id:notifId(event.id),title:"Starting soon: "+event.title,body:(event.location||"go janey.")+" — starts in 1 hour",schedule:{at:notifyAt}}]});
+    await LN.schedule({notifications:[{id:notifId(event.id),title:"Starting soon: "+event.title,body:(event.location||"go janey.")+" — starts in 1 hour",schedule:{at:notifyAt}}]});
   }catch(e){console.error("notif schedule failed",e);}
 }
 async function cancelReminder(eventId){
-  try{await LocalNotifications.cancel({notifications:[{id:notifId(eventId)}]});}catch(e){console.error("notif cancel failed",e);}
+  const LN=await getLocalNotifications();
+  if(!LN)return;
+  try{await LN.cancel({notifications:[{id:notifId(eventId)}]});}catch(e){console.error("notif cancel failed",e);}
 }
 
 const T = {
@@ -361,13 +370,15 @@ export default function App(){
     setInterested(new Set());
   };
 
-  useEffect(()=>{
+  const refreshEvents=useCallback(()=>{
     if(!SUPABASE_READY)return;
     setLoading(true);setDbError(null);
     fetchEventsFromDb({timeBucket:activeFilter,category:activeCat})
       .then(rows=>{setEvents(rows.length?rows:MOCK_EVENTS);setLoading(false);})
       .catch(err=>{setDbError(err.message);console.error("Supabase error:", err);setLoading(false);});
   },[activeFilter,activeCat]);
+
+  useEffect(()=>{refreshEvents();},[refreshEvents]);
 
   const withDist=events.map(e=>({...e,cat:e.cat||e.category,distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
 
@@ -382,7 +393,7 @@ export default function App(){
     return true;
   }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
 
-  const NAV=[{id:"feed",icon:"⚡",label:"Discover"},{id:"map",icon:"◎",label:"Map"},{id:"saved",icon:"🔖",label:"Saved"},{id:"profile",icon:"◈",label:"Profile"}];
+  const NAV=[{id:"feed",icon:"⚡",label:"Discover"},{id:"map",icon:"◎",label:"Map"},{id:"saved",icon:"🔖",label:"Saved"},{id:"profile",icon:"◈",label:"Profile"},{id:"refresh",icon:"↻",label:"Refresh"}];
 
   return(
     <>
@@ -474,8 +485,8 @@ export default function App(){
         {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
-          {NAV.map(n=>{const a=screen===n.id;return(<button key={n.id} onClick={()=>setScreen(n.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
-            <span style={{fontSize:19,lineHeight:1,filter:a?`drop-shadow(0 0 4px ${T.pine}88)`:"none",transform:a?"scale(1.1)":"scale(1)",transition:"all .18s"}}>{n.icon}</span>
+          {NAV.map(n=>{const isRefresh=n.id==="refresh";const a=!isRefresh&&screen===n.id;return(<button key={n.id} onClick={()=>isRefresh?refreshEvents():setScreen(n.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
+            <span style={{fontSize:19,lineHeight:1,filter:a?`drop-shadow(0 0 4px ${T.pine}88)`:"none",transform:a?"scale(1.1)":"scale(1)",display:"inline-block",animation:isRefresh&&loading?"spin .8s linear infinite":"none",transition:"transform .18s"}}>{n.icon}</span>
             <span style={{fontFamily:"'Inter',sans-serif",fontSize:9,letterSpacing:"0.06em",textTransform:"uppercase",color:a?T.pine:T.sage,fontWeight:a?700:400,transition:"color .18s"}}>{n.label}</span>
           </button>);})}
         </nav>
