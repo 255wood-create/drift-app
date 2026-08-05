@@ -1,4 +1,4 @@
-# go janey. — Project Handoff (Updated August 4, 2026, evening)
+# go janey. — Project Handoff (Updated August 5, 2026, evening)
 
 ## What This Is
 A mobile-first local event discovery app for Boulder, Colorado and nearby towns. Users open the app to see what's happening today, tomorrow, this weekend, or upcoming. Categories: Live Music, Comedy, Food. NOT an RSVP or ticketing system — purely discovery.
@@ -121,13 +121,21 @@ The last three (`SERPAPI_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`) power the ne
 - iOS app via Capacitor, with privacy/support pages and refreshed icons (Aug 2)
 - App Store submission completed (Aug 3)
 - UI polish: nav icons (heart/person), profile icon glow, refresh button, iPad centering, Discover icon (Aug 3)
+- Event times display in the viewer's actual local time, not raw UTC (Aug 5 — see "Key Troubleshooting History")
+- Today/Tomorrow/This Weekend/Upcoming tabs are computed live from each event's real date on every render, instead of trusting a `time_bucket` value frozen at insert time (Aug 5)
+- Past events (with a known date) auto-hide from both the app and admin panel; admin has a "Show past events" checkbox to look back (Aug 5)
+- Admin panel flags likely duplicate events (⚠️ highlight) — matches on normalized title (punctuation/"&" vs "and" insensitive) plus same-or-missing date; warns before manually adding a title that already exists (Aug 5)
+- Footer disclaimer on the main screen: "Before heading out, pls verify date, time, locations. We're good... not perfect." (Aug 5)
+- Search list expanded from 39 to 48 queries — added do303, Nissi's (Lafayette), Limelight Hotel, St Julien Hotel, Planet Bluegrass, Gold Hill Inn, Folsom Field, CBar, Bandsintown; corrected The Speakeasy's city to Longmont (Aug 5)
 
 ### Not Working / Incomplete
-- gojaney.com DNS still propagating (works via drift-boulder-now.vercel.app)
+- gojaney.com DNS has finished propagating (confirmed Aug 5, resolves 200) — no longer an issue, drift-boulder-now.vercel.app is just a backup now
 - App icon blurry on iPhone Chrome (iOS limitation — need Safari or App Store)
 - Event coordinates mostly default to Boulder center (map now real, but pins aren't accurate yet)
-- Auto-pulled events often missing real times
-- **URGENT — check first thing tomorrow:** SerpApi/Google Events is returning ZERO results for every search query as of Aug 4 evening (~7:30pm MT). Confirmed this is NOT a code or account problem: SerpApi account is Active with 107/250 monthly searches left, no rate limiting, and the API calls succeed (status "Success") — but Google's events panel comes back "Fully empty" even for generic test queries like "Events in New York" run directly against SerpApi outside this app. This affects BOTH the new "Fetch New Events" button AND the regular 12:01am/6am cron jobs — no new events will come in until this resolves. Try the Fetch button again tomorrow; if still empty, contact SerpApi support (account email: 255wood@gmail.com) since the account itself looks healthy.
+- Auto-pulled events often missing real times (display of known times is now correct — Aug 5 — this is about events where SerpApi never returned a time at all)
+- Events with no `starts_at` at all (e.g. a stray "Prokofiev, Copland, Rossini & Ravel" entry) can't be auto-detected as past or duplicate — left for manual review/deletion in admin by design (Aug 5 decision)
+- **STILL BROKEN as of Aug 5, ~10am MT — confirmed again by triggering the Fetch button live:** SerpApi/Google Events is still returning ZERO results for every search query, same as Aug 4 evening (all 39 original queries returned nothing; two Lyons/Louisville queries now also fail outright with "undefined" errors, which is new). This has now persisted 2+ days. SerpApi account was healthy as of Aug 4 (107/250 searches left, no rate limiting, calls return "Success" with empty results) — check if that's still true, and if so this needs to go to SerpApi support (account email: 255wood@gmail.com). Blocks all new event data (both the "Fetch New Events" button and the 12:01am/6am cron jobs) until resolved.
+- **iOS App Store submission:** version 1.0, build 3 submitted for Apple review Aug 5 evening, includes all of today's fixes below. Check App Store Connect (appstoreconnect.apple.com) for review status — typically resolves in a few hours to 1-2 days. Ignore the leftover 1.1 (builds 2, 4, 5) entries under TestFlight — they're harmless orphaned uploads from mid-session troubleshooting, not attached to anything, don't need cleanup.
 
 ## File Structure
 ```
@@ -180,7 +188,7 @@ drift-boulder/
 Runs twice daily: 12:01am and 6:00am. The `caffeinate` line at 12:02am keeps the laptop awake for ~6.2 hours to cover both runs. NOTE: cron only runs when the laptop is open and awake — the admin panel's "Fetch New Events" button (Aug 4) doesn't have this limitation since it runs on Vercel.
 
 ## Search Queries
-Now defined once in `lib/eventSearch.js` (`QUERIES` export) and used by both `fetch3.js` and `api/pull-events.js` — edit that one file to add/remove venues or searches. As of Aug 4, includes generic searches plus ~30 venue-specific ones (Fox Theatre, Boulder Theater, eTown Hall, Chautauqua, Comedy Works, Louisville Underground, etc.) across Boulder, Lyons, Louisville, Lafayette, and Nederland.
+Defined once in `lib/eventSearch.js` (`QUERIES` export) and used by both `fetch3.js` and `api/pull-events.js` — edit that one file to add/remove venues or searches. As of Aug 5, 48 total queries: generic searches plus ~34 venue-specific ones across Boulder, Lyons, Louisville, Lafayette, and Nederland. Lindsay can also edit this list herself directly on GitHub (github.com/255wood-create/drift-boulder/blob/main/lib/eventSearch.js, pencil icon to edit) — but if she does, the local laptop copy (which the 12:01am/6am cron actually runs from) needs a `git pull` to pick up the change; only the Vercel-hosted "Fetch New Events" button auto-updates from a GitHub-only edit.
 
 ## Junk Filter (SKIP list)
 chemical, engineering, shares, internship, volunteer, certification, training course, webinar, online, virtual, job fair, hiring, real estate, open house, church service, bible study, board meeting, city council
@@ -191,14 +199,18 @@ denver, aurora, lakewood, littleton, englewood, thornton, arvada, westminster
 ## Next Steps (Priority Order)
 
 ### 1. Resolve the SerpApi/Google Events outage (see "Not Working" above)
-Blocks all new event data until fixed — check this first tomorrow.
+Now 2+ days broken — blocks all new event data until fixed. Contact SerpApi support if the account still looks healthy but returns empty results.
 
-### 2. Better Event Data
-- Real event times (most auto-pulled events missing times)
+### 2. Check iOS App Store review status
+Version 1.0 build 3 was submitted Aug 5 evening — check appstoreconnect.apple.com for approval/feedback.
+
+### 3. Better Event Data
+- Real event times (most auto-pulled events missing times — a data-availability problem, not the display bug fixed Aug 5)
 - Real coordinates per event (most use default Boulder center — now matters more since the map is real)
 - More food events (Google has very few — need manual curation)
 
 ## Completed
+- **Timezone/bucket/duplicate fixes + iOS resubmission (August 5, 2026)** — see "App Features > Working" above for the full list (local-time display, live-computed date tabs, past-event hiding, tighter duplicate detection, disclaimer, 9 new venues). iOS app rebuilt and resubmitted as version 1.0 build 3.
 - **Admin panel Edit button (August 4, 2026)** — fix a wrong date/time/etc. on an existing event without deleting and re-adding.
 - **Cloud-triggered "Fetch New Events" button (August 4, 2026)** — new `api/pull-events.js` Vercel function lets the admin panel pull new events on demand from any device, not just the laptop running cron. Shared search logic extracted to `lib/eventSearch.js`. Added "Louisville Underground events" to the search list. Fixed a bug where the same event from two search queries in one run could be inserted twice.
 - **App Store submission (August 3, 2026)** — Apple Developer account, Capacitor iOS wrap, and submission all done.
@@ -229,4 +241,8 @@ Blocks all new event data until fixed — check this first tomorrow.
 - Network Solutions DNS is slow to propagate — nameservers set to Vercel
 - Cron jobs only run when laptop is open
 - Vercel env var values pasted from a rich-text source can carry an invisible character that breaks `fetch()` headers with a cryptic "Cannot convert argument to a ByteString" error — paste from plain text only. The `/api/pull-events` endpoint now validates and names the exact bad variable/character position if this happens again (Aug 4).
-- SerpApi/Google Events returning zero results for all queries is a known external failure mode — verify by testing a generic query (e.g. "Events in New York") directly against SerpApi outside the app before assuming it's a code bug (Aug 4).
+- SerpApi/Google Events returning zero results for all queries is a known external failure mode — verify by testing a generic query (e.g. "Events in New York") directly against SerpApi outside the app before assuming it's a code bug (Aug 4). Still broken as of Aug 5.
+- **Timezone display bug pattern (Aug 5):** admin.html correctly converts entered local time to UTC on save (`new Date(sd+"T"+st).toISOString()`), but App.jsx was reading `getUTCHours()`/`getUTCMinutes()` straight off the timestamp and displaying that as if it were already local — showing times ~6-7 hours off. Fixed by converting to local (`getHours()`/`getMinutes()`) at display time. If a similar wrong-time bug resurfaces, check for this exact UTC-vs-local mismatch pattern first.
+- **"No known time" placeholder detection is timezone/DST-dependent:** the scraper stores just-a-date events as local midnight `.toISOString()`'d, which lands on different UTC hours depending on which machine ran it and the time of year — `00:00 UTC` (Vercel, always), `06:00 UTC` (laptop/MDT, ~Mar-Nov), or `07:00 UTC` (laptop/MST, ~Nov-Mar). Display code checks all three (`uh===0||uh===6||uh===7`) to correctly hide fake placeholder times.
+- **App Store Connect requires exact version-number match:** an uploaded build can only attach to a version page with the identical version string (e.g. a "1.1" build cannot attach to a "1.0" page), and you can't create a new version page while the current one is unresolved ("Waiting for Review" or needs "remove this version from review" first) — you can only reuse an existing version number if it was never actually approved/released. Don't bump the marketing version number unless you're sure the current one has been released; if it's just stuck in review, keep the same version number and only bump the build number (`xcrun agvtool new-version -all N`).
+- **Xcode caches project settings in memory:** editing `project.pbxproj`/`Info.plist` via `xcrun agvtool` (or any external edit) while Xcode already has the project open won't be picked up — Xcode will archive using its stale in-memory values. Fully quit Xcode (`osascript -e 'tell application "Xcode" to quit'`) and reopen (`npm run cap:open:ios`) after any command-line version/config change, before archiving.
