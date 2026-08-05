@@ -215,6 +215,15 @@ starts_at:sd&&st?new Date(sd+"T"+st).toISOString():null,
 lat:la,lng:ln,is_trending:false
 };
 var isEdit=!!editingId;
+if(!isEdit){
+var norm=t.toLowerCase();
+var existing=null;
+for(var id in allEvts){if((allEvts[id].title||"").trim().toLowerCase()===norm){existing=allEvts[id];break;}}
+if(existing){
+var when=existing.starts_at?new Date(existing.starts_at).toLocaleDateString([],{month:"short",day:"numeric"}):"no date set";
+if(!confirm("\""+t+"\" already exists in the list (dated "+when+"). Add it anyway?"))return;
+}
+}
 var req=isEdit?api("events?id=eq."+editingId,"PATCH",evt):api("events","POST",evt);
 req.then(function(r){
 if(!r.ok)throw new Error("Failed (status "+r.status+")");
