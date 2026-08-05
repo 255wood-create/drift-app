@@ -74,6 +74,16 @@ function isPastEvent(startsAt){
   }
   return d<new Date();
 }
+function computeBucket(startsAt){
+  const d=new Date(startsAt);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const eventDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const diff=Math.round((eventDay-today)/86400000);
+  if(diff<=0) return "Today";
+  if(diff===1) return "Tomorrow";
+  if(diff<=6) return "This Weekend";
+  return "Upcoming";
+}
 async function fetchEventsFromDb(){
   const { data, error } = await supabase.from('events').select('*').order('starts_at');
   if (error) throw new Error(error.message);
@@ -383,15 +393,15 @@ export default function App(){
 
   useEffect(()=>{refreshEvents();},[refreshEvents]);
 
-  const withDist=events.map(e=>({...e,cat:e.cat||e.category,distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
+  const withDist=events.map(e=>({...e,cat:e.cat||e.category,effectiveBucket:e.starts_at?computeBucket(e.starts_at):(e.time_bucket||"Upcoming"),distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
 
   const toggleSave=async id=>{if(!user){setScreen("profile");return;}const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleSavedDb(user.id,id,was).catch(console.error);if(was){cancelReminder(id);}else{const ev=events.find(e=>e.id===id);if(ev)scheduleReminder(ev);}};
   const toggleInt=async id=>{if(!user){setScreen("profile");return;}const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleIntDb(user.id,id,was).catch(console.error);};
 
   const filtered=withDist.filter(e=>{
     if(activeCat!=="all"&&(e.category||"").trim().toLowerCase()!==activeCat)return false;
-        var dow=new Date().getDay();var todayIsWeekend=dow>=5||dow===0;var tomorrowIsWeekend=(dow+1)%7>=5||(dow+1)%7===0||dow===5;if(activeFilter==="Today"&&e.time_bucket!=="Today"&&e.time_bucket!=="Tonight")return false;
-    if(activeFilter==="This Weekend"&&(e.time_bucket==="Today"||e.time_bucket==="Tonight")&&todayIsWeekend){}else if(activeFilter==="This Weekend"&&e.time_bucket==="Tomorrow"&&tomorrowIsWeekend){}else if(activeFilter!=="Today"&&e.time_bucket!==activeFilter)return false;
+        var dow=new Date().getDay();var todayIsWeekend=dow>=5||dow===0;var tomorrowIsWeekend=(dow+1)%7>=5||(dow+1)%7===0||dow===5;if(activeFilter==="Today"&&e.effectiveBucket!=="Today")return false;
+    if(activeFilter==="This Weekend"&&e.effectiveBucket==="Today"&&todayIsWeekend){}else if(activeFilter==="This Weekend"&&e.effectiveBucket==="Tomorrow"&&tomorrowIsWeekend){}else if(activeFilter!=="Today"&&e.effectiveBucket!==activeFilter)return false;
     
     return true;
   }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
