@@ -62,10 +62,22 @@ function loadGoogleMaps(){
   });
 }
 
+function isPastEvent(startsAt){
+  if(!startsAt) return false;
+  const d=new Date(startsAt);
+  const uh=d.getUTCHours(), um=d.getUTCMinutes();
+  const isPlaceholderTime=um===0&&(uh===0||uh===6||uh===7);
+  if(isPlaceholderTime){
+    const today=new Date(); today.setHours(0,0,0,0);
+    const eventDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    return eventDay<today;
+  }
+  return d<new Date();
+}
 async function fetchEventsFromDb(){
   const { data, error } = await supabase.from('events').select('*').order('starts_at');
   if (error) throw new Error(error.message);
-  return data || [];
+  return (data || []).filter(e=>!isPastEvent(e.starts_at));
 }
 async function toggleSavedDb(userId, eventId, wasSaved){
   if(wasSaved) await supabase.from('saved_events').delete().match({user_id:userId, event_id:eventId});

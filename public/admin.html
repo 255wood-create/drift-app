@@ -113,10 +113,12 @@ Here is the event info:</div>
 </div>
 <div class="c">
 <h2 style="font-size:16px;margin-bottom:8px">Current Events <span id="cnt" style="font-size:12px;color:#888"></span></h2>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:400;text-transform:none;color:#666;margin-bottom:8px"><input id="showPast" type="checkbox" style="width:auto" onchange="loadEvts()"/> Show past events</label>
 <div id="list">Connect first...</div>
 </div>
 </div>
 <script>
+function normTitle(t){return(t||"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9\s]/g,"").replace(/\s+/g," ").trim();}
 var U="https://lknoxozdbkikysxoarzu.supabase.co";
 var DEFAULT_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
 var KEY="";
@@ -216,9 +218,9 @@ lat:la,lng:ln,is_trending:false
 };
 var isEdit=!!editingId;
 if(!isEdit){
-var norm=t.toLowerCase();
+var norm=normTitle(t);
 var existing=null;
-for(var id in allEvts){if((allEvts[id].title||"").trim().toLowerCase()===norm){existing=allEvts[id];break;}}
+for(var id in allEvts){if(normTitle(allEvts[id].title)===norm){existing=allEvts[id];break;}}
 if(existing){
 var when=existing.starts_at?new Date(existing.starts_at).toLocaleDateString([],{month:"short",day:"numeric"}):"no date set";
 if(!confirm("\""+t+"\" already exists in the list (dated "+when+"). Add it anyway?"))return;
@@ -274,17 +276,46 @@ return r.json();
 }).then(function(data){
 allEvts={};
 if(!data.length){document.getElementById("cnt").textContent="(0)";document.getElementById("list").innerHTML="No events";return;}
-var dupeKey=function(e){return(e.title||"").trim().toLowerCase().replace(/\s+/g," ");};
-var counts={};
-for(var i=0;i<data.length;i++){var k=dupeKey(data[i]);counts[k]=(counts[k]||0)+1;}
+var isPastEvt=function(e){
+if(!e.starts_at)return false;
+var d=new Date(e.starts_at);
+var uh=d.getUTCHours(),um=d.getUTCMinutes();
+var placeholder=um===0&&(uh===0||uh===6||uh===7);
+if(placeholder){
+var today=new Date();today.setHours(0,0,0,0);
+var eventDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+return eventDay<today;
+}
+return d<new Date();
+};
+var showPast=document.getElementById("showPast").checked;
+var visible=showPast?data:data.filter(function(e){return !isPastEvt(e);});
+for(var i=0;i<data.length;i++)allEvts[data[i].id]=data[i];
+if(!visible.length){document.getElementById("cnt").textContent="("+data.length+")";document.getElementById("list").innerHTML="No events"+(showPast?"":" to show (past events hidden)");return;}
+var titleKey=function(e){return normTitle(e.title);};
+var groups={};
+for(var i=0;i<visible.length;i++){var k=titleKey(visible[i]);(groups[k]=groups[k]||[]).push(visible[i]);}
+var dupeIds={};
 var dupeGroups=0;
-for(var k in counts){if(counts[k]>1)dupeGroups++;}
-document.getElementById("cnt").textContent="("+data.length+")"+(dupeGroups?" · "+dupeGroups+" possible duplicate"+(dupeGroups>1?"s":""):"");
+for(var k in groups){
+var grp=groups[k];
+if(grp.length<2)continue;
+var localDateStr=function(iso){var d=new Date(iso);return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate();};
+var dateStrs=grp.map(function(e){return e.starts_at?localDateStr(e.starts_at):null;});
+var hasNull=dateStrs.indexOf(null)>=0;
+var seen={};
+var hasCollision=false;
+for(var j=0;j<dateStrs.length;j++){if(dateStrs[j]!==null){if(seen[dateStrs[j]])hasCollision=true;seen[dateStrs[j]]=true;}}
+if(hasNull||hasCollision){
+dupeGroups++;
+for(var m=0;m<grp.length;m++)dupeIds[grp[m].id]=true;
+}
+}
+document.getElementById("cnt").textContent="("+data.length+")"+(showPast?"":", "+visible.length+" shown")+(dupeGroups?" · "+dupeGroups+" possible duplicate"+(dupeGroups>1?"s":""):"");
 var h="<table><tr><th>Title</th><th>Cat</th><th>Bucket</th><th>When</th><th></th></tr>";
-for(var i=0;i<data.length;i++){
-var e=data[i];
-allEvts[e.id]=e;
-var isDupe=counts[dupeKey(e)]>1;
+for(var i=0;i<visible.length;i++){
+var e=visible[i];
+var isDupe=!!dupeIds[e.id];
 h+="<tr"+(isDupe?" style='background:#FEF0E0'":"")+"><td>"+(isDupe?"⚠️ ":"")+e.title+"</td><td>"+e.category+"</td><td>"+(e.time_bucket||"")+"</td>";
 h+="<td>"+(e.starts_at?new Date(e.starts_at).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"—")+"</td>";
 h+="<td><button class=del style='background:#E8F0EC;color:#2F5D50' onclick=\"editEvt('"+e.id+"')\">Edit</button> <button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";
