@@ -120,7 +120,7 @@ function SaveBtn({saved,onToggle}){
 
 function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,timeBucket}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
-  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();timeStr=(d.getUTCMonth()+1)+"/"+d.getUTCDate();if(!((uh===0&&um===0)||(uh===6&&um===0))){var ampm=uh>=12?"PM":"AM";var h=uh%12||12;timeStr+=" · "+h+":"+(um<10?"0":"")+um+" "+ampm;}}
+  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();timeStr=(d.getMonth()+1)+"/"+d.getDate();if(!(um===0&&(uh===0||uh===6||uh===7))){var lh=d.getHours();var lm=d.getMinutes();var ampm=lh>=12?"PM":"AM";var h=lh%12||12;timeStr+=" · "+h+":"+(lm<10?"0":"")+lm+" "+ampm;}}
   return(
     <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{flex:1,minWidth:0}}>

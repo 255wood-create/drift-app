@@ -263,14 +263,20 @@ api("events?select=*&order=created_at.desc").then(function(r){
 if(!r.ok)throw new Error("Failed");
 return r.json();
 }).then(function(data){
-document.getElementById("cnt").textContent="("+data.length+")";
 allEvts={};
-if(!data.length){document.getElementById("list").innerHTML="No events";return;}
+if(!data.length){document.getElementById("cnt").textContent="(0)";document.getElementById("list").innerHTML="No events";return;}
+var dupeKey=function(e){return(e.title||"").trim().toLowerCase().replace(/\s+/g," ");};
+var counts={};
+for(var i=0;i<data.length;i++){var k=dupeKey(data[i]);counts[k]=(counts[k]||0)+1;}
+var dupeGroups=0;
+for(var k in counts){if(counts[k]>1)dupeGroups++;}
+document.getElementById("cnt").textContent="("+data.length+")"+(dupeGroups?" · "+dupeGroups+" possible duplicate"+(dupeGroups>1?"s":""):"");
 var h="<table><tr><th>Title</th><th>Cat</th><th>Bucket</th><th>When</th><th></th></tr>";
 for(var i=0;i<data.length;i++){
 var e=data[i];
 allEvts[e.id]=e;
-h+="<tr><td>"+e.title+"</td><td>"+e.category+"</td><td>"+(e.time_bucket||"")+"</td>";
+var isDupe=counts[dupeKey(e)]>1;
+h+="<tr"+(isDupe?" style='background:#FEF0E0'":"")+"><td>"+(isDupe?"⚠️ ":"")+e.title+"</td><td>"+e.category+"</td><td>"+(e.time_bucket||"")+"</td>";
 h+="<td>"+(e.starts_at?new Date(e.starts_at).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"—")+"</td>";
 h+="<td><button class=del style='background:#E8F0EC;color:#2F5D50' onclick=\"editEvt('"+e.id+"')\">Edit</button> <button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";
 }
