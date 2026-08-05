@@ -491,7 +491,7 @@ export default function App(){
                 <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.sage}}>Try a different filter or category</p>
               </div>
             )}
-            <p style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,textAlign:"center",marginTop:24,padding:"0 10px"}}>Event details are pulled from public listings and community submissions — please verify dates and times before heading out.</p>
+            <p style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,textAlign:"center",marginTop:24,padding:"0 10px"}}>Please verify dates, times and locations before heading out. We ain't always perfect.</p>
           </main>
         )}
 
