@@ -491,7 +491,6 @@ export default function App(){
                 <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.sage}}>Try a different filter or category</p>
               </div>
             )}
-            <p style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,textAlign:"center",marginTop:24,padding:"0 10px"}}>Please verify dates, times and locations before heading out. We're pretty good...not perfect.</p>
           </main>
         )}
 
@@ -499,13 +498,16 @@ export default function App(){
         {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt} userCoords={userCoords}/>}
         {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
-        <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
-          {NAV.map(n=>{const isRefresh=n.id==="refresh";const a=!isRefresh&&screen===n.id;return(<button key={n.id} onClick={()=>{if(isRefresh){setScreen("feed");refreshEvents();}else{setScreen(n.id);}}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
-            <span style={{fontSize:19,lineHeight:1,filter:a&&n.id!=="profile"&&n.id!=="feed"?`drop-shadow(0 0 4px ${T.pine}88)`:"none",transform:a?"scale(1.1)":"scale(1)",display:"inline-block",animation:isRefresh&&loading?"spin .8s linear infinite":"none",transition:"transform .18s"}}>
-              {n.id==="feed"?<svg width="19" height="19" viewBox="0 0 24 24" style={{display:"block"}}><path fill={T.amber} d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>:n.icon}
-            </span>
-            <span style={{fontFamily:"'Inter',sans-serif",fontSize:9,letterSpacing:"0.06em",textTransform:"uppercase",color:a?T.pine:T.sage,fontWeight:a?700:400,transition:"color .18s"}}>{n.label}</span>
-          </button>);})}
+        <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
+          <p style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage,textAlign:"center",padding:"0 10px",marginBottom:8}}>Please verify dates, times and locations before heading out. We're pretty good...not perfect.</p>
+          <div style={{display:"flex"}}>
+            {NAV.map(n=>{const isRefresh=n.id==="refresh";const a=!isRefresh&&screen===n.id;return(<button key={n.id} onClick={()=>{if(isRefresh){setScreen("feed");refreshEvents();}else{setScreen(n.id);}}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
+              <span style={{fontSize:19,lineHeight:1,filter:a&&n.id!=="profile"&&n.id!=="feed"?`drop-shadow(0 0 4px ${T.pine}88)`:"none",transform:a?"scale(1.1)":"scale(1)",display:"inline-block",animation:isRefresh&&loading?"spin .8s linear infinite":"none",transition:"transform .18s"}}>
+                {n.id==="feed"?<svg width="19" height="19" viewBox="0 0 24 24" style={{display:"block"}}><path fill={T.amber} d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>:n.icon}
+              </span>
+              <span style={{fontFamily:"'Inter',sans-serif",fontSize:9,letterSpacing:"0.06em",textTransform:"uppercase",color:a?T.pine:T.sage,fontWeight:a?700:400,transition:"color .18s"}}>{n.label}</span>
+            </button>);})}
+          </div>
         </nav>
       </div>
     </>
