@@ -139,11 +139,12 @@ function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
   var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();timeStr=(d.getMonth()+1)+"/"+d.getDate();if(!(um===0&&(uh===0||uh===6||uh===7))){var lh=d.getHours();var lm=d.getMinutes();var ampm=lh>=12?"PM":"AM";var h=lh%12||12;timeStr+=" · "+h+":"+(lm<10?"0":"")+lm+" "+ampm;}}
   return(
     <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-      <div style={{flex:1,minWidth:0}}>
+      <div style={{width:26,flexShrink:0}}/>
+      <div style={{flex:1,minWidth:0,textAlign:"center"}}>
         <div style={{fontFamily:"Inter,sans-serif",fontSize:15,fontWeight:600,color:"#1F2320"}}>{event.title}</div>
         <div style={{fontFamily:"Inter,sans-serif",fontSize:13,color:"#6B706C",marginTop:2}}>{event.location}{timeStr?" · "+timeStr:""}</div>
       </div>
-      <button onClick={e=>{e.stopPropagation();onSave();}} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,opacity:saved?1:0.3,flexShrink:0,marginLeft:8,padding:4}}>{saved?"\u2764":"\u2661"}</button>
+      <button onClick={e=>{e.stopPropagation();onSave();}} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,opacity:saved?1:0.3,flexShrink:0,width:26,padding:4}}>{saved?"\u2764":"\u2661"}</button>
     </div>
   );
 }
