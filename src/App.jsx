@@ -93,7 +93,7 @@ async function toggleIntDb(userId, eventId, wasInt){
 }
 const CATEGORIES=[
   {id:"music",label:"Live Music",icon:"♪"},{id:"comedy",label:"Comedy",icon:"🎤"},
-  {id:"food",label:"Food",icon:"🍕"},
+  {id:"food",label:"Food & Culture",icon:"🍴"},
 ];
 
 const CAT_META={
@@ -102,7 +102,7 @@ const CAT_META={
   outdoor:{color:T.pine,bg:T.pineLt,label:"Outdoor Activities",gradBg:"linear-gradient(160deg,#2A4A3A,#0F1F18)",gradAccent:"rgba(143,175,154,0.25)"},
   wellness:{color:"#8B7A3A",bg:"#F5F0DC",label:"Wellness / Fitness",gradBg:"linear-gradient(160deg,#5C4A1A,#3D2E0A)",gradAccent:"rgba(217,164,65,0.4)"},
   comedy:{color:"#C75C8A",bg:"#F8ECF1",label:"Comedy",gradBg:"linear-gradient(160deg,#5C1A3A,#3D0820)",gradAccent:"rgba(199,92,138,0.3)"},
-  food:{color:T.amber,bg:T.amberLt,label:"Food",gradBg:"linear-gradient(160deg,#5C3A1A,#3D2008)",gradAccent:"rgba(217,164,65,0.3)"},
+  food:{color:T.amber,bg:T.amberLt,label:"Food & Culture",gradBg:"linear-gradient(160deg,#5C3A1A,#3D2008)",gradAccent:"rgba(217,164,65,0.3)"},
   community:{color:T.sage,bg:T.sageLt,label:"Community",gradBg:"linear-gradient(160deg,#2A3D30,#151F18)",gradAccent:"rgba(143,175,154,0.3)"},
 };
 
@@ -402,7 +402,7 @@ export default function App(){
             <div style={{position:"relative",padding:"10px 16px",display:"flex",gap:6,justifyContent:"center"}}>
               {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"4px 9px",background:activeFilter===f?"#FFFFFF":"rgba(245,243,239,0.1)",color:activeFilter===f?"#3D4240":"#3D4240",border:"none",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.04em",textTransform:"uppercase",cursor:"pointer",transition:"all .18s"}}>{f}</button>))}
             </div>
-            <div style={{position:"relative",display:"flex",gap:6,padding:"0 16px 12px",justifyContent:"center"}}>
+            <div style={{position:"relative",display:"flex",gap:6,padding:"0 16px 12px",justifyContent:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
               {CATEGORIES.map(c=>{const isA=activeCat===c.id;const meta=c.id!=="all"?CAT_META[c.id]:null;return(<button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:"5px 12px",background:isA?"#FFFFFF":"rgba(245,243,239,0.1)",color:isA?"#3D4240":"#3D4240",border:isA?"0.5px solid #FFFFFF":"0.5px solid rgba(245,243,239,0.2)",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:isA?700:500,cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap"}}>{c.icon} {c.label}</button>);})}
             </div>
           </header>
@@ -448,7 +448,7 @@ export default function App(){
         {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
-          <p style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:T.sage,textAlign:"center",padding:"0 10px",marginBottom:8}}>Before heading out, pls verify date, time, locations. We're good... not perfect.</p>
+          <p style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:"#7A9583",textAlign:"center",padding:"0 10px",marginBottom:8}}>Before heading out, pls verify date, time, locations. We're good... not perfect.</p>
           <div style={{display:"flex"}}>
             {NAV.map(n=>{const isRefresh=n.id==="refresh";const a=!isRefresh&&screen===n.id;return(<button key={n.id} onClick={()=>{if(isRefresh){setScreen("feed");refreshEvents();}else{setScreen(n.id);}}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
               <span style={{fontSize:19,lineHeight:1,filter:a&&n.id!=="profile"&&n.id!=="feed"?`drop-shadow(0 0 4px ${T.pine}88)`:"none",transform:a?"scale(1.1)":"scale(1)",display:"inline-block",animation:isRefresh&&loading?"spin .8s linear infinite":"none",transition:"transform .18s"}}>
