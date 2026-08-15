@@ -35,12 +35,6 @@ const T = {
   shadow:"rgba(31,35,32,0.09)",shadowMd:"rgba(31,35,32,0.15)",
 };
 
-function haversine(lat1,lon1,lat2,lon2){
-  const R=3958.8,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-function fmt(mi){if(mi===null)return"—";if(mi<0.1)return"<0.1 mi";return`${mi.toFixed(1)} mi`;}
 
 const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL  || "https://lknoxozdbkikysxoarzu.supabase.co";
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
@@ -140,7 +134,7 @@ function SaveBtn({saved,onToggle}){
   return(<button onClick={e=>{e.stopPropagation();onToggle();}} style={{width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(31,35,32,0.5)",border:"none",cursor:"pointer",fontSize:11,flexShrink:0}}>🔖</button>);
 }
 
-function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,timeBucket}){
+function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
   var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();timeStr=(d.getMonth()+1)+"/"+d.getDate();if(!(um===0&&(uh===0||uh===6||uh===7))){var lh=d.getHours();var lm=d.getMinutes();var ampm=lh>=12?"PM":"AM";var h=lh%12||12;timeStr+=" · "+h+":"+(lm<10?"0":"")+lm+" "+ampm;}}
   return(
@@ -153,21 +147,20 @@ function EventCard({event,saved,interested,onSave,onInterest,index,distMiles,tim
     </div>
   );
 }
-function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
+function MapView({events,saved,interested,onSave,onInterest}){
   const[selected,setSelected]=useState(null);
   const[mapReady,setMapReady]=useState(false);
   const sel=selected?events.find(e=>e.id===selected):null;
   const mapElRef=useRef(null);
   const mapObjRef=useRef(null);
   const markersRef=useRef([]);
-  const userMarkerRef=useRef(null);
 
   useEffect(()=>{
     let cancelled=false;
     loadGoogleMaps().then(()=>{
       if(cancelled||!mapElRef.current)return;
       mapObjRef.current=new window.google.maps.Map(mapElRef.current,{
-        center:{lat:userLat||40.0150,lng:userLng||-105.2705},
+        center:{lat:40.0150,lng:-105.2705},
         zoom:13,
         disableDefaultUI:true,
         zoomControl:true,
@@ -203,30 +196,12 @@ function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
     });
   },[mapReady,events,selected]);
 
-  useEffect(()=>{
-    if(!mapReady||!mapObjRef.current||userLat==null)return;
-    if(userMarkerRef.current)userMarkerRef.current.setMap(null);
-    userMarkerRef.current=new window.google.maps.Marker({
-      position:{lat:userLat,lng:userLng},
-      map:mapObjRef.current,
-      icon:{
-        path:window.google.maps.SymbolPath.CIRCLE,
-        fillColor:T.sky,
-        fillOpacity:1,
-        strokeColor:"#fff",
-        strokeWeight:3,
-        scale:7,
-      },
-      zIndex:20,
-    });
-  },[mapReady,userLat,userLng]);
-
   return(
     <div style={{flex:1,position:"relative",overflow:"hidden"}}>
       <div ref={mapElRef} style={{position:"absolute",inset:0,background:"#E8E4DF"}}/>
       <div style={{position:"absolute",top:16,left:16,background:"rgba(245,243,239,0.95)",padding:"8px 14px",boxShadow:`0 2px 12px ${T.shadow}`,zIndex:10}}>
         <div style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal}}>Boulder, CO</div>
-        <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage,marginTop:1}}>{userLat!=null?"📍 Using your location":`${events.length} events`}</div>
+        <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage,marginTop:1}}>{`${events.length} events`}</div>
       </div>
       {sel&&(
         <div style={{position:"absolute",bottom:0,left:0,right:0,background:T.white,padding:"18px 20px 80px",boxShadow:`0 -4px 32px ${T.shadowMd}`,animation:"slideUp .25s ease",zIndex:20}}>
@@ -242,7 +217,6 @@ function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
           <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <TimeBadge time={sel.time}/>
-              {sel.distMiles!=null&&<span style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.amber,fontWeight:600}}>{fmt(sel.distMiles)} away</span>}
             </div>
             <button onClick={()=>onInterest(sel.id)} style={{background:interested.has(sel.id)?T.amber:T.fog,color:interested.has(sel.id)?T.charcoal:T.sage,border:`0.5px solid ${interested.has(sel.id)?T.amber:T.stone}`,padding:"6px 14px",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>
               {interested.has(sel.id)?"✦ Interested":"✦ Going?"}
@@ -254,7 +228,7 @@ function MapView({events,saved,interested,onSave,onInterest,userLat,userLng}){
   );
 }
 
-function SavedView({events,saved,interested,onSave,onInterest,userCoords}){
+function SavedView({events,saved,interested,onSave,onInterest}){
   const sv=events.filter(e=>saved.has(e.id));
   return(
     <div style={{flex:1,overflowY:"auto",padding:"24px 16px 100px"}}>
@@ -268,7 +242,7 @@ function SavedView({events,saved,interested,onSave,onInterest,userCoords}){
         </div>
       ):(
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {sv.map((e,i)=>(<EventCard key={e.id} event={e} index={i} saved={saved.has(e.id)} interested={interested.has(e.id)} onSave={()=>onSave(e.id)} onInterest={()=>onInterest(e.id)} distMiles={userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}/>))}
+          {sv.map((e,i)=>(<EventCard key={e.id} event={e} index={i} saved={saved.has(e.id)} interested={interested.has(e.id)} onSave={()=>onSave(e.id)} onInterest={()=>onInterest(e.id)}/>))}
         </div>
       )}
     </div>
@@ -307,18 +281,6 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,e
       <button onClick={signOut} style={{width:"100%",background:"#F5F3EF",border:"1px solid #D9D6CF",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,color:"#6B706C",cursor:"pointer"}}>Sign Out</button>
     </div>
   );
-}function GeoBanner({geoState,onRequest}){
-  if(geoState==="granted"||geoState==="loading")return null;
-  return(
-    <div style={{margin:"0 0 12px",background:T.white,border:`0.5px solid ${T.stone}`,padding:"10px 14px",display:"flex",alignItems:"center",gap:10,boxShadow:`0 1px 6px ${T.shadow}`}}>
-      <span style={{fontSize:18,flexShrink:0}}>📍</span>
-      <div style={{flex:1}}>
-        <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:700,color:T.charcoal}}>{geoState==="denied"?"Location access denied":"See real distances from you"}</div>
-        <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.sage,marginTop:1}}>{geoState==="denied"?"Update browser settings to allow":"Events sort by how close they are"}</div>
-      </div>
-      {geoState!=="denied"&&<button onClick={onRequest} style={{background:T.charcoal,color:T.fog,border:"none",padding:"6px 12px",fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0}}>Allow</button>}
-    </div>
-  );
 }
 
 export default function App(){
@@ -332,25 +294,11 @@ export default function App(){
   const[interested,setInterested]=useState(new Set());
   
   const[liveCount,setLiveCount]=useState(214);
-  const[geoState,setGeoState]=useState("idle");
-  const[userCoords,setUserCoords]=useState(null);
   const[events,setEvents]=useState(MOCK_EVENTS);
   const[loading,setLoading]=useState(false);
   const[dbError,setDbError]=useState(null);
 
   useEffect(()=>{const id=setInterval(()=>setLiveCount(c=>c+Math.floor(Math.random()*3)-1),2800);return()=>clearInterval(id);},[]);
-
-  const requestGeo=useCallback(()=>{
-    if(!navigator.geolocation){setGeoState("denied");return;}
-    setGeoState("loading");
-    navigator.geolocation.getCurrentPosition(
-      pos=>{setUserCoords({lat:pos.coords.latitude,lng:pos.coords.longitude});setGeoState("granted");},
-      err=>{setGeoState(err.code===1?"denied":"idle");},
-      {enableHighAccuracy:true,timeout:10000}
-    );
-  },[]);
-
-  useEffect(()=>{requestGeo();},[]);
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
@@ -393,7 +341,7 @@ export default function App(){
 
   useEffect(()=>{refreshEvents();},[refreshEvents]);
 
-  const withDist=events.map(e=>({...e,cat:e.cat||e.category,effectiveBucket:e.starts_at?computeBucket(e.starts_at):(e.time_bucket||"Upcoming"),distMiles:userCoords&&e.lat?haversine(userCoords.lat,userCoords.lng,e.lat,e.lng):null}));
+  const withDist=events.map(e=>({...e,cat:e.cat||e.category,effectiveBucket:e.starts_at?computeBucket(e.starts_at):(e.time_bucket||"Upcoming")}));
 
   const toggleSave=async id=>{if(!user){setScreen("profile");return;}const was=saved.has(id);setSaved(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleSavedDb(user.id,id,was).catch(console.error);if(was){cancelReminder(id);}else{const ev=events.find(e=>e.id===id);if(ev)scheduleReminder(ev);}};
   const toggleInt=async id=>{if(!user){setScreen("profile");return;}const was=interested.has(id);setInterested(s=>{const n=new Set(s);was?n.delete(id):n.add(id);return n;});await toggleIntDb(user.id,id,was).catch(console.error);};
@@ -404,7 +352,7 @@ export default function App(){
     if(activeFilter==="This Weekend"&&e.effectiveBucket==="Today"&&todayIsWeekend){}else if(activeFilter==="This Weekend"&&e.effectiveBucket==="Tomorrow"&&tomorrowIsWeekend){}else if(activeFilter!=="Today"&&e.effectiveBucket!==activeFilter)return false;
     
     return true;
-  }).sort((a,b)=>a.distMiles!=null&&b.distMiles!=null?a.distMiles-b.distMiles:0);
+  });
 
   const NAV=[{id:"feed",icon:"⚡",label:"Discover"},{id:"map",icon:"◎",label:"Map"},{id:"saved",icon:"♥",label:"Saved"},{id:"profile",icon:"👤",label:"Profile"},{id:"refresh",icon:"↻",label:"Refresh"}];
 
@@ -474,7 +422,7 @@ export default function App(){
                   {activeFilter==="Trending"&&"Trending around town"}
                 </h2>
                 <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,marginTop:3}}>
-                  {filtered.length} {filtered.length===1?"experience":"experiences"}{userCoords?" · sorted by distance":""}
+                  {filtered.length} {filtered.length===1?"experience":"experiences"}
                 </p>
               </div>
             )}
@@ -482,7 +430,7 @@ export default function App(){
               <div style={{display:"flex",justifyContent:"center",padding:"48px 0"}}><div style={{width:24,height:24,border:`2px solid ${T.stone}`,borderTop:`2px solid ${T.pine}`,borderRadius:"50%",animation:"spin .8s linear infinite"}}/></div>
             ):filtered.length>0?(
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {filtered.map((e,i)=>(<EventCard key={e.id} event={e} index={i} saved={saved.has(e.id)} interested={interested.has(e.id)} onSave={()=>toggleSave(e.id)} onInterest={()=>toggleInt(e.id)} distMiles={e.distMiles}/>))}
+                {filtered.map((e,i)=>(<EventCard key={e.id} event={e} index={i} saved={saved.has(e.id)} interested={interested.has(e.id)} onSave={()=>toggleSave(e.id)} onInterest={()=>toggleInt(e.id)}/>))}
               </div>
             ):(
               <div style={{textAlign:"center",padding:"60px 20px",animation:"fadeIn .4s ease"}}>
@@ -494,8 +442,8 @@ export default function App(){
           </main>
         )}
 
-        {screen==="map"&&<MapView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt} userLat={userCoords?.lat} userLng={userCoords?.lng}/>}
-        {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt} userCoords={userCoords}/>}
+        {screen==="map"&&<MapView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
+        {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
         {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
