@@ -75,7 +75,10 @@ function computeBucket(startsAt){
   const diff=Math.round((eventDay-today)/86400000);
   if(diff<=0) return "Today";
   if(diff===1) return "Tomorrow";
-  if(diff<=6) return "This Weekend";
+  const dow=today.getDay();
+  const daysToFriday=(5-dow+7)%7;
+  const daysToSunday=(7-dow)%7;
+  if(diff>=daysToFriday&&diff<=daysToSunday) return "This Weekend";
   return "Upcoming";
 }
 async function fetchEventsFromDb(){
@@ -448,7 +451,7 @@ export default function App(){
         {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
-          <p style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:"#7A9583",textAlign:"center",padding:"0 10px",marginBottom:8}}>Before heading out, pls verify date, time, locations. We're good... not perfect.</p>
+          <p style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:"#7A9583",textAlign:"center",padding:"0 10px",marginBottom:8}}>Before heading out, verify date, time, locations. We're good... not perfect.</p>
           <div style={{display:"flex"}}>
             {NAV.map(n=>{const isRefresh=n.id==="refresh";const a=!isRefresh&&screen===n.id;return(<button key={n.id} onClick={()=>{if(isRefresh){setScreen("feed");refreshEvents();}else{setScreen(n.id);}}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
               <span style={{fontSize:19,lineHeight:1,filter:a&&n.id!=="profile"&&n.id!=="feed"?`drop-shadow(0 0 4px ${T.pine}88)`:"none",transform:a?"scale(1.1)":"scale(1)",display:"inline-block",animation:isRefresh&&loading?"spin .8s linear infinite":"none",transition:"transform .18s"}}>
