@@ -47,7 +47,8 @@ td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 <select id="bucket"><option value="Today">Today</option><option value="Tomorrow">Tomorrow</option><option value="This Weekend">This Weekend</option><option value="Upcoming">Upcoming</option></select></div>
 </div>
 <label>Location</label>
-<input id="loc" placeholder="Venue - Neighborhood"/>
+<input id="loc" list="venueList" placeholder="Venue - Neighborhood" oninput="onLocInput()"/>
+<datalist id="venueList"></datalist>
 <label>Vibe (optional)</label>
 <input id="vibe" placeholder="e.g. Live jazz - Outdoor seating"/>
 <div class="r">
@@ -58,7 +59,7 @@ td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 <div><label>Latitude</label><input id="lat" type="number" step="0.0001" placeholder="40.0093"/></div>
 <div><label>Longitude</label><input id="lng" type="number" step="0.0001" placeholder="-105.2723"/></div>
 </div>
-<p style="font-size:11px;color:#4F86A6;margin-top:6px">Google Maps - click near venue - copy two numbers</p>
+<p style="font-size:11px;color:#4F86A6;margin-top:6px">Type a venue you've used before to auto-fill its coordinates, or get them from Google Maps - click near venue - copy two numbers</p>
 <button class="b bg" id="addBtn" onclick="addEvt()">Add Event</button>
 <button class="b" id="cancelEditBtn" style="display:none;background:#eee;color:#333" onclick="cancelEdit()">Cancel Edit</button>
 <div id="as"></div>
@@ -267,6 +268,71 @@ msg("fetchStatus","Error: "+e.message,false);
 });
 }
 
+var VENUE_SEED={
+"Boulder Theater":{lat:40.01932,lng:-105.277307},
+"Fox Theatre":{lat:40.009597,lng:-105.273123},
+"Chautauqua Auditorium":{lat:39.997835,lng:-105.279934},
+"eTown Hall":{lat:40.02038,lng:-105.274886},
+"St Julien":{lat:40.016179,lng:-105.282537},
+"Velvet Elk Lounge":{lat:40.0188,lng:-105.278165},
+"Tulagi on the Hill":{lat:40.008855,lng:-105.275762},
+"The Rayback":{lat:40.029731,lng:-105.25908},
+"Folsom Field":{lat:40.009513,lng:-105.26679},
+"Louisville Underground":{lat:39.976552,lng:-105.131791},
+"Nissi's Entertainment Venue & Event Center":{lat:39.985755,lng:-105.097938},
+"Roots Music Project - Pearl Street":{lat:40.0261546,lng:-105.2418338},
+"Mapleton Hill":{lat:40.020752,lng:-105.284282},
+"VisionQuest Brewery - Boulder":{lat:40.02,lng:-105.251},
+"Boulder Creek Park - Downtown":{lat:40.017,lng:-105.283},
+"Gold Hill Inn":{lat:40.063392,lng:-105.409142},
+"The End Lafayette":{lat:39.9836672,lng:-105.0963676},
+"The Caribou Room":{lat:39.9708808,lng:-105.5088748},
+"Limelight Hotel":{lat:40.0110760,lng:-105.2765606},
+"Moxy Hotel":{lat:40.0099515,lng:-105.2772049},
+"Avanti":{lat:40.0186268,lng:-105.2772790},
+"Rosetta Hall":{lat:40.0168708,lng:-105.2806360},
+"Trident Booksellers and Cafe":{lat:40.0171416,lng:-105.2829889},
+"The Laughing Goat":{lat:40.0087817,lng:-105.2702329},
+"Mountain Sun Pub and Brewery":{lat:40.0190136,lng:-105.2752150},
+"Muse Performance Space":{lat:39.9867864,lng:-105.0894234},
+"The Nomad Playhouse":{lat:40.0475423,lng:-105.2798552},
+"Pearl Street Pub and Cellar":{lat:40.0175942,lng:-105.2810382},
+"Boulder Bandshell":{lat:40.0158071,lng:-105.2789607},
+"Macky Auditorium Concert Hall":{lat:40.0099895,lng:-105.2727641},
+"Boulderado Hotel":{lat:40.0193406,lng:-105.2794309},
+"License 1":{lat:40.0194280,lng:-105.2793221},
+"Oskar Blues":{lat:40.1391920,lng:-105.1228850},
+"Riverbend":{lat:40.2260220,lng:-105.2727640},
+"Planet Bluegrass":{lat:40.2284092,lng:-105.2738009},
+"Main Stage Brewery":{lat:40.2248813,lng:-105.2712589},
+"The Rock Garden":{lat:40.2247165,lng:-105.2684365},
+"Steinbaugh Pavilion":{lat:39.9784012,lng:-105.1305525}
+};
+var venueCoords={};
+function updateVenueList(){
+venueCoords={};
+for(var v in VENUE_SEED)venueCoords[v]=VENUE_SEED[v];
+for(var id in allEvts){
+var e=allEvts[id];
+if(e.lat==null||e.lng==null||!e.location)continue;
+var loc=e.location.trim();
+if(venueCoords[loc])continue;
+venueCoords[loc]={lat:e.lat,lng:e.lng};
+}
+var opts="";
+for(var v in venueCoords)opts+="<option value=\""+v.replace(/"/g,"&quot;")+"\"></option>";
+document.getElementById("venueList").innerHTML=opts;
+}
+function onLocInput(){
+var v=document.getElementById("loc").value.trim();
+var latEl=document.getElementById("lat"),lngEl=document.getElementById("lng");
+if(venueCoords[v]&&!latEl.value&&!lngEl.value){
+latEl.value=venueCoords[v].lat;
+lngEl.value=venueCoords[v].lng;
+msg("as","Coordinates auto-filled from a previous event at this venue",true);
+}
+}
+
 var allEvts={};
 function loadEvts(){
 if(!KEY)return;
@@ -291,6 +357,7 @@ return d<new Date();
 var showPast=document.getElementById("showPast").checked;
 var visible=showPast?data:data.filter(function(e){return !isPastEvt(e);});
 for(var i=0;i<data.length;i++)allEvts[data[i].id]=data[i];
+updateVenueList();
 if(!visible.length){document.getElementById("cnt").textContent="("+data.length+")";document.getElementById("list").innerHTML="No events"+(showPast?"":" to show (past events hidden)");return;}
 var titleKey=function(e){return normTitle(e.title);};
 var groups={};
