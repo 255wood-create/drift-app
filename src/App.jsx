@@ -140,7 +140,7 @@ function SaveBtn({saved,onToggle}){
 
 function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
-  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();timeStr=(d.getMonth()+1)+"/"+d.getDate();if(!(um===0&&(uh===0||uh===6||uh===7))){var lh=d.getHours();var lm=d.getMinutes();var ampm=lh>=12?"PM":"AM";var h=lh%12||12;timeStr+=" · "+h+":"+(lm<10?"0":"")+lm+" "+ampm;}}
+  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();timeStr=(d.getMonth()+1)+"/"+d.getDate();if(!(um===0&&(uh===0||uh===6||uh===7))){var lh=d.getHours();var lm=d.getMinutes();var ampm=lh>=12?"PM":"AM";var h=lh%12||12;timeStr+=" · "+h+":"+(lm<10?"0":"")+lm+" "+ampm;}}
   return(
     <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{width:26,flexShrink:0}}/>
