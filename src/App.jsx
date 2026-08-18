@@ -236,7 +236,7 @@ function MapView({events,saved,interested,onSave,onInterest}){
 function SavedView({events,saved,interested,onSave,onInterest}){
   const sv=events.filter(e=>saved.has(e.id));
   return(
-    <div style={{flex:1,overflowY:"auto",padding:"24px 16px 100px"}}>
+    <div style={{flex:1,overflowY:"auto",padding:"24px 16px calc(100px + env(safe-area-inset-bottom))"}}>
       <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:22,fontWeight:800,color:T.charcoal,margin:"0 0 4px"}}>Saved</h2>
       <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:T.sage,margin:"0 0 20px"}}>{sv.length} {sv.length===1?"event":"events"} bookmarked</p>
       {sv.length===0?(
@@ -271,7 +271,7 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,e
   }
   const sv=events.filter(e=>saved.has(e.id));
   return(
-    <div style={{flex:1,overflowY:"auto",padding:"30px 20px 100px"}}>
+    <div style={{flex:1,overflowY:"auto",padding:"30px 20px calc(100px + env(safe-area-inset-bottom))"}}>
       <div style={{textAlign:"center",marginBottom:24}}>
         <div style={{width:60,height:60,background:"#2F5D50",color:"white",fontFamily:"'Inter',sans-serif",fontSize:24,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px"}}>{user.email[0].toUpperCase()}</div>
         <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:18,fontWeight:600,color:"#1F2320"}}>{user.email}</h2>
@@ -413,7 +413,7 @@ export default function App(){
         )}
 
         {screen==="feed"&&(
-          <main style={{flex:1,overflowY:"auto",padding:"16px 16px 100px"}}>
+          <main style={{flex:1,overflowY:"auto",padding:"16px 16px calc(100px + env(safe-area-inset-bottom))"}}>
             
             {dbError&&<div style={{background:"#FEF0E0",padding:"8px 14px",marginBottom:12}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.amber}}>Connection issue — showing demo events</span></div>}
             {(
