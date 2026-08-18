@@ -110,6 +110,7 @@ const CAT_META={
 };
 
 const FILTERS=["Today","Tomorrow","This Weekend","Upcoming"];
+const FILTER_LABELS={Today:"Today",Tomorrow:"Tomorrow","This Weekend":"This Weekend",Upcoming:"Ahead"};
 
 const MOCK_EVENTS=[
   {id:1,cat:"music",time:"Today",is_trending:true,title:"Leftover Salmon — Acoustic Set",location:"The Sink · The Hill",vibe:"Bluegrass jam · Outdoor patio",lat:40.0090,lng:-105.2711},
@@ -395,7 +396,7 @@ export default function App(){
               </div>
               <div style={{position:"absolute",bottom:16,left:16,right:16}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontSize:22,fontWeight:600,color:T.fog,lineHeight:1.2}}>
-                  {activeFilter==="Today"&&"Happening today"}{activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}{activeFilter==="This Weekend"&&"This weekend"}{activeFilter==="Upcoming"&&"Upcoming"}
+                  {activeFilter==="Today"&&"Happening today"}{activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}{activeFilter==="This Weekend"&&"This weekend"}{activeFilter==="Upcoming"&&"Ahead"}
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"rgba(245,243,239,0.6)",marginTop:6}}>
                   {filtered.length} {filtered.length===1?"event":"events"} in Boulder
@@ -403,7 +404,7 @@ export default function App(){
               </div>
             </div>
             <div style={{position:"relative",padding:"10px 16px",display:"flex",gap:6,justifyContent:"center"}}>
-              {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"4px 9px",background:activeFilter===f?"#FFFFFF":"rgba(245,243,239,0.1)",color:activeFilter===f?"#3D4240":"#3D4240",border:"none",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.04em",textTransform:"uppercase",cursor:"pointer",transition:"all .18s"}}>{f}</button>))}
+              {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"4px 9px",background:activeFilter===f?"#FFFFFF":"rgba(245,243,239,0.1)",color:activeFilter===f?"#3D4240":"#3D4240",border:"none",fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.04em",textTransform:"uppercase",cursor:"pointer",transition:"all .18s"}}>{FILTER_LABELS[f]}</button>))}
             </div>
             <div style={{position:"relative",display:"flex",gap:6,padding:"0 16px 12px",justifyContent:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
               {CATEGORIES.map(c=>{const isA=activeCat===c.id;const meta=c.id!=="all"?CAT_META[c.id]:null;return(<button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:"5px 12px",background:isA?"#FFFFFF":"rgba(245,243,239,0.1)",color:isA?"#3D4240":"#3D4240",border:isA?"0.5px solid #FFFFFF":"0.5px solid rgba(245,243,239,0.2)",fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:isA?700:500,cursor:"pointer",transition:"all .18s",whiteSpace:"nowrap"}}>{c.icon} {c.label}</button>);})}
@@ -422,7 +423,7 @@ export default function App(){
                   {activeFilter==="Tonight"&&"Going on tonight"}
                   {activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}
                   {activeFilter==="This Weekend"&&"This weekend in Boulder"}
-                  {activeFilter==="Upcoming"&&"Upcoming"}
+                  {activeFilter==="Upcoming"&&"Ahead"}
                   {activeFilter==="Trending"&&"Trending around town"}
                 </h2>
                 <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,marginTop:3}}>
