@@ -110,7 +110,7 @@ const CAT_META={
 };
 
 const FILTERS=["Today","Tomorrow","This Weekend","Upcoming"];
-const FILTER_LABELS={Today:"Today",Tomorrow:"Tomorrow","This Weekend":"This Weekend",Upcoming:"Ahead"};
+const FILTER_LABELS={Today:"Today",Tomorrow:"Tomorrow","This Weekend":"This Weekend",Upcoming:"Upcoming"};
 
 const MOCK_EVENTS=[
   {id:1,cat:"music",time:"Today",is_trending:true,title:"Leftover Salmon — Acoustic Set",location:"The Sink · The Hill",vibe:"Bluegrass jam · Outdoor patio",lat:40.0090,lng:-105.2711},
@@ -396,7 +396,7 @@ export default function App(){
               </div>
               <div style={{position:"absolute",bottom:16,left:16,right:16}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontSize:22,fontWeight:600,color:T.fog,lineHeight:1.2}}>
-                  {activeFilter==="Today"&&"Happening today"}{activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}{activeFilter==="This Weekend"&&"This weekend"}{activeFilter==="Upcoming"&&"Ahead"}
+                  {activeFilter==="Today"&&"Happening today"}{activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}{activeFilter==="This Weekend"&&"This weekend"}{activeFilter==="Upcoming"&&"Upcoming"}
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"rgba(245,243,239,0.6)",marginTop:6}}>
                   {filtered.length} {filtered.length===1?"event":"events"} in Boulder
@@ -423,7 +423,7 @@ export default function App(){
                   {activeFilter==="Tonight"&&"Going on tonight"}
                   {activeFilter==="Tomorrow"&&"Tomorrow in Boulder"}
                   {activeFilter==="This Weekend"&&"This weekend in Boulder"}
-                  {activeFilter==="Upcoming"&&"Ahead"}
+                  {activeFilter==="Upcoming"&&"Upcoming"}
                   {activeFilter==="Trending"&&"Trending around town"}
                 </h2>
                 <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,marginTop:3}}>
