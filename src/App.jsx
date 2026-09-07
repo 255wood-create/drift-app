@@ -377,11 +377,12 @@ export default function App(){
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes spin{to{transform:rotate(360deg)}}
         ::-webkit-scrollbar{display:none}
+        .app-shell{min-height:100vh;min-height:-webkit-fill-available;min-height:100dvh}
         *{scrollbar-width:none}
         input:focus{outline:none}
         button{user-select:none}
       `}</style>
-      <div style={{width:"100%",maxWidth:430,minHeight:"100dvh",height:"100%",display:"flex",flexDirection:"column",background:T.fog,fontFamily:"'Inter',sans-serif",margin:"0 auto"}}>
+      <div className="app-shell" style={{width:"100%",maxWidth:430,height:"100%",display:"flex",flexDirection:"column",background:T.fog,fontFamily:"'Inter',sans-serif",margin:"0 auto"}}>
 
         {screen==="feed"&&(
           <header style={{position:"sticky",top:0,zIndex:40,overflow:"hidden"}}>
