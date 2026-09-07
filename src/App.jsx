@@ -56,31 +56,32 @@ function loadGoogleMaps(){
   });
 }
 
+const DENVER_DATE = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Denver',year:'numeric',month:'2-digit',day:'2-digit'});
+function denverDay(d){return DENVER_DATE.format(d);}
+
 function isPastEvent(startsAt){
   if(!startsAt) return false;
   const d=new Date(startsAt);
   const uh=d.getUTCHours(), um=d.getUTCMinutes();
   const isPlaceholderTime=um===0&&(uh===0||uh===6||uh===7);
   if(isPlaceholderTime){
-    const today=new Date(); today.setHours(0,0,0,0);
-    const eventDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
-    return eventDay<today;
+    return denverDay(d) < denverDay(new Date());
   }
   return d<new Date();
 }
 function computeBucket(startsAt){
-  const d=new Date(startsAt);
-  const today=new Date(); today.setHours(0,0,0,0);
-  const eventDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
-  const diff=Math.round((eventDay-today)/86400000);
+  const todayStr=denverDay(new Date());
+  const eventStr=denverDay(new Date(startsAt));
+  const diff=Math.round((new Date(eventStr+"T00:00:00Z")-new Date(todayStr+"T00:00:00Z"))/86400000);
   if(diff<=0) return "Today";
   if(diff===1) return "Tomorrow";
-  const dow=today.getDay();
+  const dow=new Date(todayStr+"T00:00:00Z").getUTCDay();
   const daysToFriday=(5-dow+7)%7;
   const daysToSunday=daysToFriday+2;
   if(diff>=daysToFriday&&diff<=daysToSunday) return "This Weekend";
   return "Upcoming";
 }
+
 async function fetchEventsFromDb(){
   const { data, error } = await supabase.from('events').select('*').order('starts_at');
   if (error) throw new Error(error.message);
