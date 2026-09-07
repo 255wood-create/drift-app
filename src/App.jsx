@@ -147,7 +147,7 @@ function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
       <div style={{width:26,flexShrink:0}}/>
       <div style={{flex:1,minWidth:0,textAlign:"center"}}>
         <div style={{fontFamily:"Inter,sans-serif",fontSize:15,fontWeight:600,color:"#1F2320"}}>{event.title}</div>
-        {event.vibe&&<div style={{fontFamily:"Caveat,cursive",fontWeight:700,fontSize:16,color:"#9AA09B",marginTop:1,lineHeight:1.2}}>{event.vibe}</div>}
+        {event.vibe&&<div style={{fontFamily:"Caveat,cursive",fontWeight:400,fontSize:15,color:"#AEB3AF",marginTop:1,lineHeight:1.2}}>{event.vibe}</div>}
         <div style={{fontFamily:"Inter,sans-serif",fontSize:13,color:"#6B706C",marginTop:2}}>{event.location}{timeStr?" · "+timeStr:""}</div>
       </div>
       <button onClick={e=>{e.stopPropagation();onSave();}} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,opacity:saved?1:0.3,flexShrink:0,width:26,padding:4}}>{saved?"\u2764":"\u2661"}</button>
@@ -366,7 +366,7 @@ export default function App(){
   return(
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Caveat:wght@700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
         html,body,#root{height:100%}
         html,body{position:fixed;inset:0;overflow:hidden;overscroll-behavior:none;width:100%}
