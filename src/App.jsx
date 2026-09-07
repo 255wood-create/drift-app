@@ -77,7 +77,7 @@ function computeBucket(startsAt){
   if(diff===1) return "Tomorrow";
   const dow=today.getDay();
   const daysToFriday=(5-dow+7)%7;
-  const daysToSunday=(7-dow)%7;
+  const daysToSunday=daysToFriday+2;
   if(diff>=daysToFriday&&diff<=daysToSunday) return "This Weekend";
   return "Upcoming";
 }
