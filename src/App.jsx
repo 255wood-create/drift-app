@@ -57,7 +57,7 @@ function loadGoogleMaps(){
 }
 
 const DENVER_DATE = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Denver',year:'numeric',month:'2-digit',day:'2-digit'});
-function denverDay(d){return DENVER_DATE.format(d);}
+function denverDay(d){if(!d)return null;var x=new Date(d);if(isNaN(x.getTime()))return null;return DENVER_DATE.format(x);}
 
 function isPastEvent(startsAt){
   if(!startsAt) return false;
@@ -65,13 +65,14 @@ function isPastEvent(startsAt){
   const uh=d.getUTCHours(), um=d.getUTCMinutes();
   const isPlaceholderTime=um===0&&(uh===0||uh===6||uh===7);
   if(isPlaceholderTime){
-    return denverDay(d) < denverDay(new Date());
+    const a=denverDay(d), b=denverDay(new Date()); if(!a||!b) return false; return a < b;
   }
   return d<new Date();
 }
 function computeBucket(startsAt){
   const todayStr=denverDay(new Date());
-  const eventStr=denverDay(new Date(startsAt));
+  const eventStr=denverDay(startsAt);
+  if(!eventStr||!todayStr) return "Upcoming";
   const diff=Math.round((new Date(eventStr+"T00:00:00Z")-new Date(todayStr+"T00:00:00Z"))/86400000);
   if(diff<=0) return "Today";
   if(diff===1) return "Tomorrow";
@@ -81,7 +82,6 @@ function computeBucket(startsAt){
   if(diff>=daysToFriday&&diff<=daysToSunday) return "This Weekend";
   return "Upcoming";
 }
-
 async function fetchEventsFromDb(){
   const { data, error } = await supabase.from('events').select('*').order('starts_at');
   if (error) throw new Error(error.message);
@@ -141,7 +141,7 @@ function SaveBtn({saved,onToggle}){
 
 function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
-  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();var dp=denverDay(d).split("-");timeStr=parseInt(dp[1],10)+"/"+parseInt(dp[2],10);if(!(um===0&&(uh===0||uh===6||uh===7))){var dt=new Intl.DateTimeFormat("en-US",{timeZone:"America/Denver",hour:"numeric",minute:"2-digit",hour12:true}).format(d);timeStr+=" · "+dt;}}
+  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();var dd=denverDay(d);if(dd){var dp=dd.split("-");timeStr=parseInt(dp[1],10)+"/"+parseInt(dp[2],10);}if(dd&&!(um===0&&(uh===0||uh===6||uh===7))){var dt=new Intl.DateTimeFormat("en-US",{timeZone:"America/Denver",hour:"numeric",minute:"2-digit",hour12:true}).format(d);timeStr+=" · "+dt;}}
   return(
     <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{width:26,flexShrink:0}}/>
