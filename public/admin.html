@@ -115,6 +115,7 @@ Here is the event info:</div>
 <div class="c">
 <h2 style="font-size:16px;margin-bottom:8px">Current Events <span id="cnt" style="font-size:12px;color:#888"></span></h2>
 <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:400;text-transform:none;color:#666;margin-bottom:8px"><input id="showPast" type="checkbox" style="width:auto" onchange="loadEvts()"/> Show past events</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:400;text-transform:none;color:#666;margin-bottom:8px">Sort: <select id="sortBy" style="width:auto;font-size:12px" onchange="loadEvts()"><option value="created">Newest added</option><option value="title">Title A-Z</option><option value="date">Event date</option></select></label>
 <div id="list">Connect first...</div>
 </div>
 </div>
@@ -355,7 +356,11 @@ return eventDay<today;
 return d<new Date();
 };
 var showPast=document.getElementById("showPast").checked;
-var visible=showPast?data:data.filter(function(e){return !isPastEvt(e);});
+var visible=showPast?data.slice():data.filter(function(e){return !isPastEvt(e);});
+var sortEl=document.getElementById("sortBy");
+var sortBy=sortEl?sortEl.value:"created";
+if(sortBy==="title"){visible.sort(function(a,b){return (a.title||"").toLowerCase().localeCompare((b.title||"").toLowerCase());});}
+else if(sortBy==="date"){visible.sort(function(a,b){if(!a.starts_at&&!b.starts_at)return 0;if(!a.starts_at)return 1;if(!b.starts_at)return -1;return a.starts_at<b.starts_at?-1:1;});}
 for(var i=0;i<data.length;i++)allEvts[data[i].id]=data[i];
 updateVenueList();
 if(!visible.length){document.getElementById("cnt").textContent="("+data.length+")";document.getElementById("list").innerHTML="No events"+(showPast?"":" to show (past events hidden)");return;}
