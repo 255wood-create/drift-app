@@ -291,6 +291,16 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,e
 }
 
 export default function App(){
+  const navRef = useRef(null);
+  const [navH, setNavH] = useState(150);
+  useEffect(() => {
+    const measure = () => { if (navRef.current) setNavH(navRef.current.offsetHeight + 24); };
+    measure();
+    window.addEventListener("resize", measure);
+    const t = setTimeout(measure, 300);
+    return () => { window.removeEventListener("resize", measure); clearTimeout(t); };
+  }, []);
+
   const[screen,setScreen]=useState("feed");
   const[user,setUser]=useState(null);
   const[authEmail,setAuthEmail]=useState("");
@@ -415,7 +425,7 @@ export default function App(){
         )}
 
         {screen==="feed"&&(
-          <main style={{flex:1,overflowY:"auto",padding:"16px 16px calc(150px + env(safe-area-inset-bottom))"}}>
+          <main style={{flex:1,overflowY:"auto",padding:`16px 16px ${navH}px`}}>
             
             {dbError&&<div style={{background:"#FEF0E0",padding:"8px 14px",marginBottom:12}}><span style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.amber}}>Connection issue — showing demo events</span></div>}
             {(
@@ -453,7 +463,7 @@ export default function App(){
         {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
         {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
-        <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
+        <nav ref={navRef} style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
           <p style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:"#7A9583",textAlign:"center",padding:"0 10px",marginBottom:8}}>Before heading out, verify date, time, locations. We're good... not perfect.</p>
           <div style={{display:"flex"}}>
             {NAV.map(n=>{const isRefresh=n.id==="refresh";const a=!isRefresh&&screen===n.id;return(<button key={n.id} onClick={()=>{if(isRefresh){setScreen("feed");refreshEvents();}else{setScreen(n.id);}}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
