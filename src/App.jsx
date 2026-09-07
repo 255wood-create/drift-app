@@ -147,6 +147,7 @@ function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
       <div style={{width:26,flexShrink:0}}/>
       <div style={{flex:1,minWidth:0,textAlign:"center"}}>
         <div style={{fontFamily:"Inter,sans-serif",fontSize:15,fontWeight:600,color:"#1F2320"}}>{event.title}</div>
+        {event.vibe&&<div style={{fontFamily:"Caveat,cursive",fontWeight:700,fontSize:16,color:"#9AA09B",marginTop:1,lineHeight:1.2}}>{event.vibe}</div>}
         <div style={{fontFamily:"Inter,sans-serif",fontSize:13,color:"#6B706C",marginTop:2}}>{event.location}{timeStr?" · "+timeStr:""}</div>
       </div>
       <button onClick={e=>{e.stopPropagation();onSave();}} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,opacity:saved?1:0.3,flexShrink:0,width:26,padding:4}}>{saved?"\u2764":"\u2661"}</button>
