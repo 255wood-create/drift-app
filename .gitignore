@@ -27,3 +27,19 @@ refresh-buckets.js
 test.js
 run-test.js
 _old/
+
+# one-off maintenance scripts (contain API keys)
+geo.js
+market.js
+venuefix.js
+findpairs.js
+fixaddr.js
+recat*.js
+fix-*.js
+dupes.js
+venues.js
+deer.js
+deldeer.js
+datecheck.js
+test-event.js
+.claude/
