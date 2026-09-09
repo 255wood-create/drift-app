@@ -202,7 +202,9 @@ var nk=strip(keys[i]);
 if(k===nk||k.indexOf(nk)>=0||nk.indexOf(k)>=0) return VENUE_GEO[keys[i]];}
 return null;}
 
-function MapView({events,saved,interested,onSave,onInterest}){
+function MapView({events,allEvents,activeFilter,setFilter,activeCat,setCat,saved,interested,onSave,onInterest}){
+  const[q,setQ]=useState("");
+  const shown=q.trim()?events.filter(e=>((e.location||"")+" "+(e.title||"")).toLowerCase().includes(q.trim().toLowerCase())):events;
   const[selected,setSelected]=useState(null);
   const[mapReady,setMapReady]=useState(false);
   const sel=selected?events.find(e=>e.id===selected):null;
@@ -229,7 +231,7 @@ function MapView({events,saved,interested,onSave,onInterest}){
   useEffect(()=>{
     if(!mapReady||!mapObjRef.current)return;
     markersRef.current.forEach(m=>m.setMap(null));
-    markersRef.current=events.map(evt=>{
+    markersRef.current=shown.map(evt=>{
       const meta=CAT_META[evt.cat||evt.category]||CAT_META.community;
       const isSel=selected===evt.id;
       const marker=new window.google.maps.Marker({
@@ -249,14 +251,20 @@ function MapView({events,saved,interested,onSave,onInterest}){
       marker.addListener("click",()=>setSelected(prev=>prev===evt.id?null:evt.id));
       return marker;
     });
-  },[mapReady,events,selected]);
+  },[mapReady,shown,selected]);
 
   return(
     <div style={{flex:1,position:"relative",overflow:"hidden"}}>
       <div ref={mapElRef} style={{position:"absolute",inset:0,background:"#E8E4DF"}}/>
-      <div style={{position:"absolute",top:16,left:16,background:"rgba(245,243,239,0.95)",padding:"8px 14px",boxShadow:`0 2px 12px ${T.shadow}`,zIndex:10}}>
-        <div style={{fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:800,color:T.charcoal}}>Boulder, CO</div>
-        <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:T.sage,marginTop:1}}>{`${events.length} events`}</div>
+      <div style={{position:"absolute",top:12,left:12,right:12,background:"rgba(245,243,239,0.96)",padding:"10px 12px",boxShadow:`0 2px 12px ${T.shadow}`,zIndex:10}}>
+        <input value={q} onChange={ev=>setQ(ev.target.value)} placeholder="Search venue or event" style={{width:"100%",border:"0.5px solid #D9D6CF",padding:"7px 10px",fontFamily:"Inter,sans-serif",fontSize:13,background:"#fff",marginBottom:8}}/>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
+          {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"3px 8px",background:activeFilter===f?T.pine:"transparent",color:activeFilter===f?"#fff":T.charcoalMute,border:"0.5px solid #D9D6CF",fontFamily:"Inter,sans-serif",fontSize:10,fontWeight:700,cursor:"pointer"}}>{FILTER_LABELS[f]}</button>))}
+        </div>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+          {CATEGORIES.map(c=>(<button key={c.id} onClick={()=>setCat(c.id)} style={{padding:"3px 8px",background:activeCat===c.id?T.pine:"transparent",color:activeCat===c.id?"#fff":T.charcoalMute,border:"0.5px solid #D9D6CF",fontFamily:"Inter,sans-serif",fontSize:10,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>{c.label}</button>))}
+        </div>
+        <div style={{fontFamily:"Inter,sans-serif",fontSize:10,color:T.sage,marginTop:6}}>{shown.length} shown</div>
       </div>
       {sel&&(
         <div style={{position:"absolute",bottom:0,left:0,right:0,background:T.white,padding:"18px 20px 80px",boxShadow:`0 -4px 32px ${T.shadowMd}`,animation:"slideUp .25s ease",zIndex:20}}>
@@ -524,7 +532,7 @@ export default function App(){
           </main>
         )}
 
-        {screen==="map"&&<MapView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
+        {screen==="map"&&<MapView events={displayed} allEvents={withDist} activeFilter={activeFilter} setFilter={setFilter} activeCat={activeCat} setCat={setCat} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
         {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
         {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
 
