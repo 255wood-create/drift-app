@@ -154,6 +154,54 @@ function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
     </div>
   );
 }
+const VENUE_GEO={
+"fox theatre":[40.008830,-105.276310],
+"boulder theater":[40.019632,-105.275540],
+"etown hall":[40.020578,-105.275465],
+"velvet elk":[40.019427,-105.279142],
+"macky auditorium":[40.010746,-105.272705],
+"chautauqua auditorium":[39.997863,-105.280154],
+"roots music project":[40.026327,-105.241832],
+"junkyard social":[40.023555,-105.248196],
+"rosetta hall":[40.017230,-105.280689],
+"st julien":[40.016269,-105.282740],
+"nissis lafayette":[39.986281,-105.098121],
+"oskar blues lyons":[40.225200,-105.268521],
+"planet bluegrass lyons":[40.228803,-105.273686],
+"louisville underground":[39.976707,-105.131797],
+"gold hill inn":[40.063992,-105.409228],
+"caribou room":[39.971129,-105.508814],
+"avalon ballroom":[40.015517,-105.209551],
+"speakeasy longmont":[40.164267,-105.102776],
+"end lafayette":[39.983686,-105.096341],
+"13th and canyon":[40.016766,-105.277949],
+"rayback":[40.029788,-105.259456],
+"wibby brewing":[40.162396,-105.100190],
+"toosteppin brewing":[40.026219,-105.241191],
+"avanti":[40.018833,-105.277186],
+"visionquest brewery":[40.026277,-105.243694],
+"boulder social":[40.014986,-105.245548],
+"east co":[40.021547,-105.217141],
+"upslope brewing":[40.020272,-105.218434],
+"boulderado":[40.019635,-105.279429],
+"limelight":[40.010837,-105.276256],
+"moxy":[40.009683,-105.277280],
+"trident booksellers":[40.017269,-105.282991],
+"boulder bandshell":[40.016201,-105.278640],
+"bands on the bricks":[40.018255,-105.278517],
+"muse performance space":[39.986749,-105.089129],
+"mountain sun":[40.019341,-105.275100],
+"laughing goat":[40.021245,-105.272890]};
+function venueGeo(loc){
+if(!loc) return null;
+var strip=function(s){return s.toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/  */g," ").trim();};
+var k=strip(loc);
+var keys=Object.keys(VENUE_GEO);
+for(var i=0;i<keys.length;i++){
+var nk=strip(keys[i]);
+if(k===nk||k.indexOf(nk)>=0||nk.indexOf(k)>=0) return VENUE_GEO[keys[i]];}
+return null;}
+
 function MapView({events,saved,interested,onSave,onInterest}){
   const[selected,setSelected]=useState(null);
   const[mapReady,setMapReady]=useState(false);
@@ -185,7 +233,7 @@ function MapView({events,saved,interested,onSave,onInterest}){
       const meta=CAT_META[evt.cat||evt.category]||CAT_META.community;
       const isSel=selected===evt.id;
       const marker=new window.google.maps.Marker({
-        position:{lat:evt.lat||40.0150,lng:evt.lng||-105.2705},
+        position:(function(){var g=venueGeo(evt.location);return g?{lat:g[0],lng:g[1]}:{lat:evt.lat||40.0150,lng:evt.lng||-105.2705};})(),
         map:mapObjRef.current,
         title:evt.title,
         icon:{
