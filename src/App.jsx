@@ -204,7 +204,7 @@ return null;}
 
 function MapView({events,allEvents,activeFilter,setFilter,activeCat,setCat,saved,interested,onSave,onInterest}){
   const[q,setQ]=useState("");
-  const shown=q.trim()?events.filter(e=>((e.location||"")+" "+(e.title||"")).toLowerCase().includes(q.trim().toLowerCase())):events;
+  const shown=q.trim()?(allEvents||events).filter(e=>((e.location||"")+" "+(e.title||"")).toLowerCase().includes(q.trim().toLowerCase())):events;
   const[selected,setSelected]=useState(null);
   const[mapReady,setMapReady]=useState(false);
   const sel=selected?events.find(e=>e.id===selected):null;
