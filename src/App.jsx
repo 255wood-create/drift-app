@@ -258,10 +258,10 @@ function MapView({events,allEvents,activeFilter,setFilter,activeCat,setCat,saved
       <div ref={mapElRef} style={{position:"absolute",inset:0,background:"#E8E4DF"}}/>
       <div style={{position:"absolute",top:12,left:12,right:12,background:"rgba(245,243,239,0.96)",padding:"10px 12px",boxShadow:`0 2px 12px ${T.shadow}`,zIndex:10}}>
         <input value={q} onChange={ev=>setQ(ev.target.value)} placeholder="Search venue or event" style={{width:"100%",border:"0.5px solid #D9D6CF",padding:"7px 10px",fontFamily:"Inter,sans-serif",fontSize:13,background:"#fff",marginBottom:8}}/>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6,justifyContent:"center"}}>
           {FILTERS.map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"3px 8px",background:activeFilter===f?T.pine:"transparent",color:activeFilter===f?"#fff":T.charcoalMute,border:"0.5px solid #D9D6CF",fontFamily:"Inter,sans-serif",fontSize:10,fontWeight:700,cursor:"pointer"}}>{FILTER_LABELS[f]}</button>))}
         </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center"}}>
           {CATEGORIES.map(c=>(<button key={c.id} onClick={()=>setCat(c.id)} style={{padding:"3px 8px",background:activeCat===c.id?T.pine:"transparent",color:activeCat===c.id?"#fff":T.charcoalMute,border:"0.5px solid #D9D6CF",fontFamily:"Inter,sans-serif",fontSize:10,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>{c.label}</button>))}
         </div>
         <div style={{fontFamily:"Inter,sans-serif",fontSize:10,color:T.sage,marginTop:6}}>{shown.length} shown</div>
@@ -273,6 +273,7 @@ function MapView({events,allEvents,activeFilter,setFilter,activeCat,setCat,saved
             <div style={{flex:1}}>
               <h3 style={{fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:800,color:T.charcoal,margin:"0 0 4px"}}>{sel.title}</h3>
               <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,margin:"0 0 3px"}}>📍 {sel.location}</p>
+<a href={(function(){var g=venueGeo(sel.location);var d=g?(g[0]+","+g[1]):encodeURIComponent(sel.location||"Boulder");return "https://maps.google.com/?q="+d;})()} target="_blank" style={{display:"inline-block",fontSize:11,fontWeight:600,color:T.pine,textDecoration:"none",padding:"3px 10px"}}>Directions</a>
               {sel.vibe&&<p style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:T.stone,fontStyle:"italic",margin:0}}>{sel.vibe}</p>}
             </div>
             <SaveBtn saved={saved.has(sel.id)} onToggle={()=>onSave(sel.id)}/>
