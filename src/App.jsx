@@ -141,7 +141,7 @@ function SaveBtn({saved,onToggle}){
 
 function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
   const meta=CAT_META[event.cat||event.category]||CAT_META.community;
-  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();var dd=denverDay(d);if(dd){var dp=dd.split("-");timeStr=parseInt(dp[1],10)+"/"+parseInt(dp[2],10);}if(dd&&!(um===0&&(uh===0||uh===6||uh===7))){var dt=new Intl.DateTimeFormat("en-US",{timeZone:"America/Denver",hour:"numeric",minute:"2-digit",hour12:true}).format(d);timeStr+=" · "+dt;}}
+  var timeStr="";if(event.starts_at){var d=new Date(event.starts_at);var uh=d.getUTCHours();var um=d.getUTCMinutes();var dd=denverDay(d);if(dd){var dp=dd.split("-");timeStr=parseInt(dp[1],10)+"/"+parseInt(dp[2],10);}if(event.groupDates&&event.groupDates.length>1){var more=event.groupDates.slice(1,4).map(function(s){var g=denverDay(new Date(s));if(!g)return null;var gp=g.split("-");return parseInt(gp[1],10)+"/"+parseInt(gp[2],10);}).filter(Boolean);if(more.length)timeStr+=", "+more.join(", ");var extra=event.groupDates.length-4;if(extra>0)timeStr+=" +"+extra+" more";}if(dd&&(!event.groupDates||event.groupSameTime)&&!(um===0&&(uh===0||uh===6||uh===7))){var dt=new Intl.DateTimeFormat("en-US",{timeZone:"America/Denver",hour:"numeric",minute:"2-digit",hour12:true}).format(d);timeStr+=" \u00b7 "+dt;}}
   return(
     <div style={{padding:"12px 0",borderBottom:"0.5px solid #E8E4DF",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{width:26,flexShrink:0}}/>
@@ -361,6 +361,32 @@ export default function App(){
     return true;
   });
 
+  // Upcoming only: collapse repeat occurrences of the same event into one card.
+  // Keeps the earliest occurrence (so saving hearts the next one) and hangs the
+  // other dates off it. Never merges distinct showings (Early/Late/21+ etc).
+  const variantOf=(t)=>{const s=(t||"").toLowerCase();if(/early show/.test(s))return "early";if(/late show/.test(s))return "late";if(/all ages/.test(s))return "allages";if(/21\+/.test(s))return "21plus";if(/morning show/.test(s))return "morning";return "";};
+  const venueOf=(loc)=>{const v=(loc||"").toLowerCase();if(/fox theat/.test(v))return "fox";if(/boulder theat/.test(v))return "bouldertheater";if(/nissi/.test(v))return "nissis";if(/louisville under|loiusville|undergound/.test(v))return "louisville";if(/velvet elk/.test(v))return "velvetelk";if(/etown/.test(v))return "etown";if(/gold hill/.test(v))return "goldhill";if(/planet bluegrass/.test(v))return "planetbluegrass";if(/oskar blues/.test(v))return "oskarblues";if(/roots music/.test(v))return "rootsmusic";if(/caribou/.test(v))return "caribou";if(/chautauqua/.test(v))return "chautauqua";if(/rayback/.test(v))return "rayback";if(/end lafayette/.test(v))return "endlafayette";if(/13th and canyon/.test(v))return "farmersmarket";return v.replace(/[^a-z0-9]/g,"").slice(0,12);};
+  const timeOf=(e)=>{if(!e.starts_at)return null;const d=new Date(e.starts_at);const uh=d.getUTCHours(),um=d.getUTCMinutes();if(um===0&&(uh===0||uh===6||uh===7))return null;return new Intl.DateTimeFormat("en-US",{timeZone:"America/Denver",hour:"numeric",minute:"2-digit",hour12:true}).format(d);};
+
+  let displayed=filtered;
+  if(activeFilter==="Upcoming"){
+    const buckets={};
+    const order=[];
+    for(const e of filtered){
+      const k=(e.title||"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim()+"|"+venueOf(e.location)+"|"+variantOf(e.title);
+      if(!buckets[k]){buckets[k]=[];order.push(k);}
+      buckets[k].push(e);
+    }
+    displayed=order.map(k=>{
+      const grp=buckets[k];
+      if(grp.length<2)return grp[0];
+      grp.sort((a,b)=>(a.starts_at||"")<(b.starts_at||"")?-1:1);
+      const times=grp.map(timeOf);
+      const sameTime=times.every(t=>t===times[0]);
+      return {...grp[0],groupDates:grp.map(g=>g.starts_at).filter(Boolean),groupSameTime:sameTime};
+    });
+  }
+
   const NAV=[{id:"feed",icon:"⚡",label:"Discover"},{id:"map",icon:"◎",label:"Map"},{id:"saved",icon:"♥",label:"Saved"},{id:"profile",icon:"👤",label:"Profile"},{id:"refresh",icon:"↻",label:"Refresh"}];
 
   return(
@@ -430,15 +456,15 @@ export default function App(){
                   {activeFilter==="Trending"&&"Trending around town"}
                 </h2>
                 <p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:T.sage,marginTop:3}}>
-                  {filtered.length} {filtered.length===1?"experience":"experiences"}
+                  {displayed.length} {displayed.length===1?"experience":"experiences"}
                 </p>
               </div>
             )}
             {loading?(
               <div style={{display:"flex",justifyContent:"center",padding:"48px 0"}}><div style={{width:24,height:24,border:`2px solid ${T.stone}`,borderTop:`2px solid ${T.pine}`,borderRadius:"50%",animation:"spin .8s linear infinite"}}/></div>
-            ):filtered.length>0?(
+            ):displayed.length>0?(
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {filtered.map((e,i)=>(<EventCard key={e.id} event={e} index={i} saved={saved.has(e.id)} interested={interested.has(e.id)} onSave={()=>toggleSave(e.id)} onInterest={()=>toggleInt(e.id)}/>))}
+                {displayed.map((e,i)=>(<EventCard key={e.id} event={e} index={i} saved={saved.has(e.id)} interested={interested.has(e.id)} onSave={()=>toggleSave(e.id)} onInterest={()=>toggleInt(e.id)}/>))}
               </div>
             ):(
               <div style={{textAlign:"center",padding:"60px 20px",animation:"fadeIn .4s ease"}}>
