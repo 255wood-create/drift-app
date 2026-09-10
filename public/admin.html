@@ -129,7 +129,7 @@ var TOKEN="";
 function sendLink(){
 var em=document.getElementById("adminEmail").value.trim();
 if(em===""){msg("cs","Enter your email",false);return;}
-SB.auth.signInWithOtp({email:em}).then(function(r){
+SB.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+"/admin.html"}}).then(function(r){
 if(r.error){msg("cs",r.error.message,false);return;}
 msg("cs","Check your email for the sign-in link",true);});}
 function checkSession(){
