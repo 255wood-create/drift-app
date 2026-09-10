@@ -26,14 +26,15 @@ th{text-align:left;padding:6px;background:#F5F3EF;font-size:10px;color:#888}
 td{padding:5px 6px;border-bottom:1px solid #f0f0f0}
 .del{background:#FEF0E0;color:#D9A441;border:none;padding:3px 8px;font-size:11px;cursor:pointer}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="w">
 <h1>go janey. admin</h1>
 <div class="c">
 <label>Anon Key (legacy eyJ key)</label>
-<input id="key" type="password" placeholder="Paste your legacy eyJ anon key"/>
-<button class="b bg" onclick="doConnect()">Connect</button>
+<input id="adminEmail" type="email" placeholder="your email address"/>
+<button class="b bg" onclick="sendLink()">Send sign-in link</button>
 <div id="cs"></div>
 </div>
 <div class="c">
@@ -123,6 +124,19 @@ Here is the event info:</div>
 function normTitle(t){return(t||"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9\s]/g,"").replace(/\s+/g," ").trim();}
 var U="https://lknoxozdbkikysxoarzu.supabase.co";
 var DEFAULT_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrbm94b3pkYmtpa3lzeG9hcnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzA4MTYsImV4cCI6MjA5NTQ0NjgxNn0.Im1uwq7Fz6wxOKZNhiIwD8UW1rfxYazS5r53N17OH5c";
+var SB=window.supabase.createClient(U,DEFAULT_KEY);
+var TOKEN="";
+function sendLink(){
+var em=document.getElementById("adminEmail").value.trim();
+if(em===""){msg("cs","Enter your email",false);return;}
+SB.auth.signInWithOtp({email:em}).then(function(r){
+if(r.error){msg("cs",r.error.message,false);return;}
+msg("cs","Check your email for the sign-in link",true);});}
+function checkSession(){
+return SB.auth.getSession().then(function(r){
+if(r.data&&r.data.session){TOKEN=r.data.session.access_token;return true;}
+TOKEN="";return false;});}
+function signOutAdmin(){SB.auth.signOut().then(function(){location.reload();});}
 var KEY="";
 
 function msg(id,txt,ok){
@@ -132,7 +146,7 @@ e.className="msg "+(ok?"ok":"er");
 }
 
 function api(path,method,body){
-var opts={method:method||"GET",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=representation"}};
+var opts={method:method||"GET",headers:{apikey:KEY,Authorization:"Bearer "+(TOKEN||KEY),"Content-Type":"application/json",Prefer:"return=representation"}};
 if(body)opts.body=JSON.stringify(body);
 return fetch(U+"/rest/v1/"+path,opts);
 }
@@ -510,12 +524,7 @@ msg("ezStatus","Invalid JSON — make sure you copied Claude's full response",fa
 }
 
 window.onload=function(){
-var k=localStorage.getItem("jk")||DEFAULT_KEY;
-document.getElementById("key").value=k;KEY=k;
-api("events?select=title&limit=1").then(function(r){
-if(r.ok){msg("cs","Connected!",true);loadEvts();loadSubmissions();}
-else{msg("cs","Auto-connect failed (status "+r.status+") — click Connect to retry",false);}
-});
+KEY=DEFAULT_KEY;checkSession().then(function(ok){if(ok){msg("cs","Signed in",true);loadEvts();loadSubmissions();}else{msg("cs","Enter your email to sign in",false);}});
 var d=new Date().toISOString().split("T")[0];
 document.getElementById("sd").value=d;
 };
