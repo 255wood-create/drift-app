@@ -146,9 +146,13 @@ e.className="msg "+(ok?"ok":"er");
 }
 
 function api(path,method,body){
-var opts={method:method||"GET",headers:{apikey:KEY,Authorization:"Bearer "+(TOKEN||KEY),"Content-Type":"application/json",Prefer:"return=representation"}};
+return SB.auth.getSession().then(function(r){
+var t=(r.data&&r.data.session)?r.data.session.access_token:"";
+if(t)TOKEN=t;
+var opts={method:method||"GET",headers:{apikey:KEY,Authorization:"Bearer "+(t||KEY),"Content-Type":"application/json",Prefer:"return=representation"}};
 if(body)opts.body=JSON.stringify(body);
 return fetch(U+"/rest/v1/"+path,opts);
+});
 }
 
 function doConnect(){
