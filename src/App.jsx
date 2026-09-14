@@ -155,6 +155,13 @@ function EventCard({event,saved,interested,onSave,onInterest,index,timeBucket}){
   );
 }
 const VENUE_GEO={
+"cu grusin music hall":[40.006230,-105.269363],
+"c bar":[40.017756,-105.283302],
+"kgnu radio":[40.015224,-105.275978],
+"bmoca":[40.015558,-105.277370],
+"lucky market":[40.047600,-105.281245],
+"license no 1":[40.019635,-105.279429],
+"nomad playhouse":[40.048333,-105.279941],
 "fox theatre":[40.008830,-105.276310],
 "boulder theater":[40.019632,-105.275540],
 "etown hall":[40.020578,-105.275465],
