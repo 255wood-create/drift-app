@@ -1,8 +1,59 @@
-# go janey. — Project Handoff (Updated September 8, 2026)
+# go janey. — Project Handoff (Updated September 16, 2026)
 
 > **This supersedes all older copies.** Several stale versions exist on the MacBook and in
 > `~/Downloads/` (numbered copies from repeated downloads). Save this over
 > `~/drift-boulder/CLAUDE-CODE-HANDOFF.md` and delete the rest.
+
+## Sept 16 session — what changed
+- **Found a real barrier to adoption:** App Store users can install the app but **cannot sign
+  in** — the magic link opens Safari, not the app. Browsing still works; saving does not.
+- **Sign in with Apple COMPLETE and tested on a real iPhone.** Signed in, saved an event, closed
+  and reopened the app: still signed in, event still saved. Commit `db7756e`, pushed to both remotes.
+- **1.0.4 (build 10) archived and uploaded** to App Store Connect. Next: add version 1.0.4, pick
+  build 10, submit for review (if not already done). See the 1.0.4 section.
+- First on-device test from Xcode: iPhone registered as "iPhone (4)", Developer Mode enabled.
+- Two gotchas hit and fixed — a missing prop (black Profile screen) and a trailing space in the
+  version number. Both documented in the SIGN IN WITH APPLE section.
+
+## Sept 14 session — what changed
+- **Instagram marketing started** — weekly plan, post templates, and a four-frame weekend Reel.
+  See the Instagram section. Nothing posted yet.
+- **Seven venues added to `VENUE_GEO`** (CU Grusin, C Bar, KGNU, BMoCA, Lucky Market,
+  License No. 1, Nomad Playhouse).
+- **Found a real bug:** Moms Unhinged (Sept 22, Nomad Playhouse) had been **deleted from the
+  database before the event happened**. Re-added by hand. Cause not yet investigated — if
+  `refresh-buckets.js` is removing future events, others will vanish the same way. See Known
+  data issues.
+
+## Sept 13 session — what changed
+- **Admin panel 401 fixed** — `api()` now fetches a live session token per request instead of
+  caching one at page load. Verified by editing an event successfully.
+- Confirmed RLS is working correctly; an earlier "write allowed" reading was a test artefact
+  (a zero-row PATCH returns 204). See the testing note in the SECURITY section.
+
+## Sept 11 session — what changed
+- **SECURITY WORK COMPLETE.** RLS policies now restrict writes to three admin accounts. The
+  events table is no longer open to anyone holding the public key.
+- **1.0.3 (build 9) submitted, approved and released** with three new App Store screenshots.
+- **D-U-N-S number received** (149934013) — usable Sept 15.
+- Screenshots hit a **size trap** (6.5" slot, not 6.9") — see the screenshots section.
+
+## Sept 10 session — what changed
+- **Admin panel security** — cron scripts moved to the secret key, email sign-in added to the
+  panel. Completed Sept 11 with the RLS policy — see the SECURITY section.
+- **iOS 1.0.1 approved and released**; **1.0.2 (build 7) submitted** with the map rebuild
+- **`gojaney` keyword confirmed working** in App Store search
+- **Business licence applied for** (Boulder), files sent to Dun & Bradstreet
+
+## Sept 9 session — what changed
+- **Venue names consolidated** 54 → 29; 13 Comedy Works Denver events deleted and blocked
+- **Categorization resolved** — four rows, two venue additions, no AI call needed
+- **Real venue coordinates** in `VENUE_GEO`, resolved by name at display time
+- **Map rebuilt** — filters, search, centred controls, Directions link
+- **Farmers market** completed through Nov 21 with `ends_at` times
+- **Repo tidied** — iOS version fixes and cache headers committed, one-off scripts gitignored
+
+Each has its own section below.
 
 ## What This Is
 A mobile-first local event discovery app for Boulder, Colorado and nearby towns. Users open the app to see what's happening today, tomorrow, this weekend, or upcoming. Categories: Live Music, Comedy, Food & Culture. NOT an RSVP or ticketing system — purely discovery.
@@ -21,7 +72,8 @@ A mobile-first local event discovery app for Boulder, Colorado and nearby towns.
 - **Database:** Supabase (PostgreSQL) — project ID: `lknoxozdbkikysxoarzu`
 - **Hosting:** Vercel
 - **Event Scraping:** SerpApi — `fetch3.js` → `lib/eventSearch.js`
-- **Auth:** Supabase Auth with magic link (email OTP)
+- **Auth:** Sign in with Apple in the iOS app (native, `signInWithIdToken`); magic link (email OTP)
+  on the website and in the admin panel
 - **Fonts:** Inter (body), Caveat (logo "go" text)
 - **Domain:** gojaney.com registered at Network Solutions, nameservers pointed to Vercel
 
@@ -38,6 +90,55 @@ There is **no address field and no description**. Consequences:
 - **Venue** is guessed from the search query via `guessVenue()` — queries ending in "events" (e.g. "St Julien Hotel Boulder events") yield the venue name. Generic queries yield nothing, so location falls back to "Boulder".
 - **Dates** are parsed by `parseEventDate()` from the plain strings. It also handles a leading weekday ("Tue, Sep 30"), date ranges, and an object form some responses still return.
 - Not every query returns `events_results` — Google only shows an events pack for some phrasings. Venue-specific queries work best.
+
+## The Map screen (rebuilt Sept 9)
+The map is **real Google Maps**, not the SVG placeholder older notes describe. The API key is
+hardcoded at the top of `App.jsx` (`GOOGLE_MAPS_KEY`). Worth checking it has referrer
+restrictions set in the Google Cloud console — an unrestricted key in client-side source can
+be used by anyone and billed to the account.
+
+### Venue coordinates live in the app, not the database
+`VENUE_GEO` in `App.jsx` maps ~37 venue names to lat/lng pairs, and `venueGeo(loc)` resolves a
+location string to coordinates. Markers use this rather than the `lat`/`lng` columns, falling
+back to the stored values and then Boulder centre.
+
+**Why in the app rather than the data:** manual admin entry produces variation ("Boulderado"
+vs "Boulderado Hotel"), and resolving at display time means it works however an event was
+entered. `venueGeo` lowercases, strips punctuation, and does substring matching in both
+directions, so partial names match.
+
+The database `lat`/`lng` columns were also backfilled (via `geo.js`), so they're roughly
+right, but the app doesn't rely on them.
+
+**Coordinates were verified by Lindsay** against her own list — these are not Google's
+approximations. `VENUE_GEO` also holds nine venues with no events yet (Boulderado, Limelight,
+Moxy, Trident, Boulder Bandshell, Bands on the Bricks, Muse Performance Space, Mountain Sun,
+Laughing Goat), ready for when events appear there.
+
+### Map controls
+A panel across the top holds a search field, time filters, category filters, and a count.
+Filter buttons are centred; the search field is full width.
+
+**Filters are shared with the feed** — changing them on the map changes the feed and vice
+versa. One mental model, deliberately.
+
+**Search deliberately ignores the filters.** With the box empty, the map shows `displayed`
+(the filtered, grouped list). Type anything and it searches `allEvents` instead, matching
+venue name or event title. So searching "Nissi's" finds its events even while the Today
+filter is active. Clear the box and filters apply again.
+
+**Known gap:** the map does not recentre on search results. Search a Lyons venue while looking
+at downtown Boulder and the markers change but stay off-screen, which reads as broken. Fitting
+the viewport to visible markers would fix it.
+
+**Also note:** markers stack at busy venues. Boulder Theater has ~41 events, all at one point,
+so only the topmost is clickable. Filtering mitigates this; one-marker-per-venue would solve it
+properly.
+
+### Directions link
+The event detail panel (opened by tapping a marker) has a Directions link under the venue name.
+It builds a `maps.google.com/?q=lat,lng` URL from `venueGeo`, falling back to a name search.
+On iOS this hands off to the phone's map app — deliberately not reimplementing navigation.
 
 ## Timezone Handling (fixed Sept 6)
 All date bucketing and time display now use **America/Denver explicitly**, not the device's timezone. A phone set to another zone was showing events on the wrong day.
@@ -105,6 +206,199 @@ This logic is **duplicated** in the two files. Change both together.
 
 `MUSIC_VENUES` covers: Fox Theatre, Boulder Theater, Nissi's, Louisville Underground (plus common misspellings), Velvet Elk, eTown, Gold Hill Inn, Planet Bluegrass, Oskar Blues, Roots Music Project, Caribou Room, Avalon Ballroom, Tulagi, Boulder Bandshell, Chautauqua Auditorium, Dog House Music, The End Lafayette, Trident, Speakeasy, Macky, Folsom Field.
 
+## Categorization — RESOLVED Sept 9 (no AI call needed)
+The plan had been to weigh venue expansion against an AI call with its own billing account.
+On inspection the problem was far smaller than assumed: of 62 events in Food & Culture, only
+**four** were genuinely miscategorised (Phoebe Nix, Dave Tamkin, Catzin Tzlia, J.S. Bach's
+The Art of Fugue — all musicians). Everything else — trivia, poker, dance lessons, films,
+cornhole, art festivals, the farmers market — belongs there.
+
+Fixed by adding **St Julien** and **Rosetta Hall** to `MUSIC_VENUES` and correcting the four
+rows by hand. **The venue-based approach is doing the work**; an AI call would have been
+machinery and monthly billing for a handful of rows.
+
+Lindsay confirmed "Spaghetti Western Wine Dinner" and "Fight Club Drag Comp" belong in Food
+& Culture, not music.
+
+If name-only titles become a real problem again, revisit — but measure first.
+
+## Venue names — consolidated Sept 9
+Location strings went from **54 variants to 29 real venues**. The rule Lindsay chose: **town
+appended only when it isn't Boulder.** So "Fox Theatre" and "eTown Hall" carry no town, while
+"Nissi's Lafayette", "Oskar Blues Lyons", and "The Speakeasy Longmont" do. Boulder is the
+default and goes unstated.
+
+The admin panel's venue dropdown is built from existing rows, so cleaning the data cleaned the
+dropdown — they're the same job.
+
+**13 Comedy Works events deleted.** All were Comedy Works *Denver* — national touring comics
+at a Denver room. They passed the Denver filter because it checks location strings for city
+names and "Comedy Works" contains none. **"comedy works" was added to the `DENVER` blocklist**
+so they don't return. Note that list is really a blocklist despite the name.
+
+Side effect of consolidation: rows that previously had different venue strings now share one,
+so grouping and dedupe treat them as the same venue. Two different shows at Boulder Theater on
+the same night with similar opening words could now group where they didn't before.
+
+## SECURITY — COMPLETE (Sept 11)
+
+### What the problem was
+The admin panel and the main app both ship the Supabase **anon key** in client-side source.
+That is normal for Supabase — the key is not the secret, the RLS policies are. But `events` had
+a single policy, **"Events are public"** (ALL / {public} / qual: true / with_check: true), which
+means "anyone may do anything." A test insert with the public key succeeded. Anyone who found
+`/admin.html` (unlinked, but not secret) could add, edit, or delete events.
+
+### The fix, in three parts
+1. **Cron scripts moved to the secret key.** `fetch3.js` and `refresh-buckets.js` use a Supabase
+   **secret key** (formerly `service_role`), which bypasses RLS, so they keep working. Both files
+   are gitignored — that key must never be committed or put in a browser.
+2. **Admin panel requires email sign-in.** Supabase magic links, same flow as the app.
+   `admin.html` loads `@supabase/supabase-js` and has `sendLink()` / `checkSession()` /
+   `signOutAdmin()`; `api()` sends the session token as the bearer while keeping the anon key as
+   the apikey header. Original backed up at `public/admin-backup.html`.
+   **Never commit `admin-backup.html`** — anything in `public/` is published on gojaney.com.
+   It is currently untracked; consider moving it out of `public/` or adding it to `.gitignore`.
+3. **RLS policies replaced.** The permissive policy was dropped and four created: public SELECT,
+   and INSERT / UPDATE / DELETE each restricted to three admin user IDs.
+
+### The admin accounts
+- `dd675dff-06eb-4c02-95cf-f95f69163546` — 255wood@gmail.com
+- `cb3efe31-fca9-4d4d-a030-242b6c2b9f59` — gojaneyboulder@gmail.com
+- `a34b6028-506f-4650-ae8b-9bf20727c716` — lindsayscott170@gmail.com
+
+**Two other accounts exist and are ordinary users** — `lashton@cherrycreekschools.org` and
+`lisa.2wxrkclc.paid@icloud.com` are friends. Before this change they could have edited events.
+
+To add an admin later: that person must sign into the app first so Supabase creates their user,
+then add their UID to all three write policies.
+
+### Verified after the change
+- Anon-key insert → **401 blocked** (`new row violates row-level security policy`)
+- Anon-key read → **200, events readable** (the app still works)
+- `refresh-buckets.js` → ran fine, 29 updated, 21 deleted (secret key bypasses RLS)
+- Adding an event through the signed-in admin panel → **worked**
+
+### Note on the SQL
+Running the policy script twice gives `42710: policy ... already exists`. That is the second run
+failing, not the first — check `select policyname, cmd from pg_policies where tablename='events'`
+before assuming something broke. Supabase also warns about "destructive operations" because of
+the `drop policy` line; it drops a policy, not data.
+
+### Testing RLS — a 204 does NOT mean the write succeeded
+A PATCH that RLS filters down to zero rows returns **204 / success**, because the request was
+valid; it simply matched nothing. A naive test reading only the status code reports "write
+allowed" when the write was in fact blocked. This caused a false alarm on Sept 13 and led to a
+working UPDATE policy being needlessly rewritten.
+
+**Always use `Prefer: return=representation` when testing writes** and check what comes back.
+An empty `[]` means nothing changed — RLS is working. A returned row means it really did write.
+
+### Admin panel 401s — token must be fetched per request, not cached
+Symptom: the panel shows **"Signed in"** but every save fails with **401**.
+
+Cause: `TOKEN` was captured once by `checkSession()` at page load. Supabase access tokens expire
+in about an hour, and the panel never refreshed, so it kept sending a dead credential while still
+believing it was authenticated.
+
+Fix (Sept 13): `api()` now calls `SB.auth.getSession()` on every request and uses the token from
+that, letting the Supabase client refresh as needed. `api()` was already promise-returning and
+callers already used `.then()`, so nothing else changed.
+
+**If 401s return, check this first** — "Signed in" on screen is not evidence of a live token.
+
+## SIGN IN WITH APPLE — COMPLETE (Sept 16)
+
+### The problem being solved
+**App Store users cannot sign into the iOS app.** They install fine and can browse, but tapping
+Profile → Send Sign-In Link emails them a magic link that **opens Safari at gojaney.com**, so the
+session lands in the browser, not the app. A tester put it exactly: *"Everyone gets a sign in
+link but it isn't signing me into the app itself."*
+
+Cause: the iOS app bundles its assets and runs in its own web view. `signInWithOtp` at
+`src/App.jsx:393` passes `emailRedirectTo: window.location.origin`, and all of Supabase's
+redirect URLs are web addresses, so iOS hands the link to Safari. The app never sees the token.
+
+Browsing still works without an account — only saving events needs one.
+
+### Why Sign in with Apple rather than Universal Links
+Universal Links would keep the email flow and make the link open the app (entitlement + an
+apple-app-site-association file on gojaney.com + token handling). Sign in with Apple removes the
+email round trip entirely: one tap, Face ID, done. Similar effort, better result. Lindsay was
+explicit she wanted no codes and no links.
+
+### DONE — Apple Developer portal
+- **Sign in with Apple** enabled on App ID `com.gojaney.app`, as a **primary App ID**
+- Signing key created: **`AuthKey_7S7TQ75942.p8`** — saved on the MacBook. Apple allows exactly
+  one download; if lost, it must be revoked and recreated.
+- Services ID created: **`com.gojaney.app.web`** ("go janey web"), configured with
+  `com.gojaney.app` as primary, domain `lknoxozdbkikysxoarzu.supabase.co`, return URL
+  `https://lknoxozdbkikysxoarzu.supabase.co/auth/v1/callback`
+
+Values worth keeping to hand:
+```
+Team / Account ID: 2KHJ68T9FX
+Key ID:            7S7TQ75942
+Bundle ID:         com.gojaney.app
+Services ID:       com.gojaney.app.web
+```
+
+### DONE — Supabase Apple provider
+`Authentication → Sign In / Providers → Apple`, enabled, saved and verified by reload:
+- **Client IDs:** `com.gojaney.app.web,com.gojaney.app` — Services ID **first**. Supabase uses
+  the first entry for the web OAuth flow and accepts any of them for native sign-in. Reversing
+  the order breaks web sign-in.
+- **Secret Key:** a JWT generated from the `.p8` using the tool embedded in Supabase's docs at
+  `supabase.com/docs/guides/auth/social-login/auth-apple` (Chrome or Firefox — it does not work
+  in Safari). The tool takes the `.p8` as a file upload; the key never leaves the browser.
+- **Allow users without an email: ON** — not a deliberate choice. The Save button stayed greyed
+  out until some field changed, and toggling this was what unstuck it. Means occasional accounts
+  with no email. Worth revisiting.
+
+**The Services ID and secret are pure scaffolding.** Native iOS sign-in uses neither — the OS
+hands Supabase an `id_token` directly. They exist only because the Supabase dashboard refuses to
+save without a secret. This is a known complaint (supabase discussion #44217).
+
+Also note: the secret **expires every 6 months** for web OAuth. Since nothing here uses the web
+flow, that shouldn't matter, but a calendar reminder is cheap insurance.
+
+### DONE — the app itself
+- Plugin: `@capacitor-community/apple-sign-in@7.1.0`. `npx cap sync` warns it is "built for
+  Capacitor 7", but its `Package.swift` requires `capacitor-swift-pm` **from 8.0.0**, so it is
+  compatible with our Capacitor 8.5. The warning is safe to ignore.
+- Xcode: **Sign In with Apple** capability added → `ios/App/App/App.entitlements` contains
+  `com.apple.developer.applesignin` = `Default`.
+- `src/App.jsx`:
+  - imports `SignInWithApple` and `Capacitor as CapCore` (top of file)
+  - `signInApple()` sits just above `signOut`. It makes a random nonce, sends the **SHA-256 hash**
+    to Apple and the **raw** nonce to `supabase.auth.signInWithIdToken({provider:'apple', ...})`.
+    Swapping them breaks sign-in. On first sign-in it saves Apple's name via
+    `updateUser({data:{full_name}})`. A cancelled popup clears the message silently.
+  - Profile screen shows a black "Sign in with Apple" button **only when
+    `CapCore.isNativePlatform()`** — the website is unchanged and keeps the email link.
+    The email link still shows in the app below "or use email" (it doesn't work in the app;
+    consider hiding the email form on native).
+- Added via `add_apple_signin.py` (backup at `/tmp/App.jsx.before-apple`, gone after reboot).
+
+**Gotcha — black Profile screen.** `ProfileView` (line ~325) is a separate component that
+receives its functions as props. The first build forgot to pass `signInApple`, so Profile
+rendered black. Fixed by adding it to both the `ProfileView({...})` parameter list and the
+`<ProfileView ... />` call (line ~567). **A clean Vite build does not catch this** — any new
+function used inside `ProfileView` must be passed in both places.
+
+**Gotcha — "copying shared cache symbols".** The first run on a new iPhone copies symbols for
+5–15 minutes. Developer Mode must be on (Settings → Privacy & Security → Developer Mode).
+
+**Gotcha — provisioning profile.** After adding the capability, the "gojaney App Store" profile
+was invalid (Release signing showed two red errors). Fixed by Edit → Save → Download → double-click
+on developer.apple.com, then re-selecting it in Xcode. Any future capability change needs the same.
+
+### Still worth doing
+- **In-app account deletion.** Apple requires it for apps with account creation (guideline
+  5.1.1(v)). Not present yet — if review rejects 1.0.4 for this, add a "Delete account" button.
+- Revisit "Allow users without an email" in Supabase (see above).
+- Calendar reminder for the 6-month Apple secret expiry (web flow only; not currently used).
+
 ## Supabase Schema
 ```sql
 events: id, title, category, location, venue, neighborhood, vibe, time_bucket, starts_at, ends_at, is_trending, lat, lng, emoji, gradient, created_at
@@ -131,6 +425,9 @@ VITE_SUPABASE_ANON = sb_publishable_myANV71Ao-e3TRTqM5UuOA_mTobfrdH
 - Push to BOTH: `git push origin main && git push boulder main`
 
 ## Local Scripts
+**These are gitignored as of Sept 9** — they contain the Supabase key and shouldn't be in the
+repo. They live only on the MacBook, so a fresh clone won't have them.
+
 | File | Purpose | Safe to re-run? |
 |---|---|---|
 | `fetch3.js` | Main event fetch (cron 6:05am) | Yes |
@@ -325,20 +622,15 @@ denver, aurora, lakewood, littleton, englewood, thornton, arvada, westminster
 # NEXT STEPS
 
 ## Immediate
-1. **Await Apple review of 1.0.1 build 6** (submitted Sept 8). Once approved and released,
-   App Store users finally get the Sept 6–7 fixes — they have been on the August build all
-   month.
-2. **Build 1.0.2 once 1.0.1 is released.** It would carry the Sept 8 web changes that missed
-   build 6: the Upcoming-tab grouping and the address cleanup. Decision made Sept 8 to wait
-   rather than pull 1.0.1 from review — the timezone and bucketing corrections in build 6
-   matter more than a display improvement, and resubmitting would reset the review clock.
-   Bump Version to 1.0.2 and Build to 7. Full sequence is in the iOS section below.
-3. **LLC → Organization account conversion.** Go Janey LLC is formed; the D-U-N-S request was
-   submitted to Dun & Bradstreet on Sept 8 and is awaiting their email. Once it arrives,
-   contact Apple Developer Support. See the section below.
-4. Watch the next `fetch3.js` run (6:05am cron, or run manually) and confirm new events get
-   sensible venues, dates, and categories. This is the first run using the new
-   `categorizeEvent()` with venue rules.
+1. **Submit 1.0.4 (build 10)** in App Store Connect if not already done, then watch for review.
+   After release, confirm an App Store user can sign in with Apple. If Apple rejects for missing
+   account deletion, add a "Delete account" option to Profile.
+2. **LLC → Organization conversion.** D-U-N-S **149934013** submitted to Apple Developer Support;
+   awaiting reply. Check the case thread and email.
+3. Watch a `fetch3.js` run and confirm new events get sensible venues, dates, and categories.
+
+**iOS:** 1.0.1–1.0.3 approved and released. **1.0.4 (build 10) uploaded Sept 16** with Sign in
+with Apple.
 
 ## Sept 7 session — what changed
 - **Parser year inference.** `parseEventDate()` now checks whether the parsed date lands
@@ -397,39 +689,38 @@ Does NOT catch: events with a null `starts_at`, or events whose venue can't be r
 Two. S, Jules Oskar" tells a user more than "Rossi". It is dry-run by default; `--apply`
 deletes.
 
-## OPEN DECISION: how to categorize name-only titles
-Titles that are just a person's or band's name — "Robert Ellis", "Greg Hoy", "Phoebe Nix",
-"Mr Majestyk's 8-Track Revival", "Catzin Tzlia b2b TLooP" — contain no keyword to match.
-When the venue is also unresolved (location is just "Boulder"), they fall through to the
-Food & Culture default and appear as music events in the wrong tab.
+## Farmers Market — complete through Nov 21
+Real schedule, confirmed by Lindsay:
+- **Saturdays 8:00 AM – 2:00 PM**, April 4 – November 21, 2026
+- **Wednesdays 3:30 – 7:30 PM**, May 6 – **October 7, 2026** (midweek market ends earlier)
 
-Three options considered on Sept 7:
+Seven missing Saturdays were added and `ends_at` backfilled on all rows. Wednesdays were
+already complete — Oct 7 is genuinely the last one, not a gap.
 
-**A. Expand venue coverage (recommended first step, not yet done).**
-The root cause is that these arrive from generic queries carrying no venue. Adding
-venue-specific entries to `QUERIES` for the smaller rooms that host live music — Trident
-Booksellers, Wibby Brewing, Upslope, VisionQuest, Rosetta Hall, Boulder Social, TooSteppin —
-would give those events real venues, which the existing rules already classify correctly.
-Fixes the cause, improves the cards (real venue instead of "Boulder"), costs nothing.
+### `ends_at` now displays on event cards
+The card shows "8:00 AM – 2:00 PM" when `ends_at` is set, and just the start time otherwise.
+Only the farmers market uses it currently, so most cards are unchanged. Guarded against
+invalid dates. On a grouped card the range only shows when every occurrence shares both times.
 
-**B. AI call in the fetch pipeline.**
-Send unresolved titles to Claude for classification. Would correctly know Robert Ellis is a
-musician. Requires a **console.anthropic.com account with its own billing** — separate from
-the Claude subscription, pay-as-you-go, roughly pennies per month at this volume. Should sit
-*after* the venue rules so it only handles what those can't resolve (~10–20 per fetch, not
-all 100), and must fall back to keyword logic if the API fails so a bad night degrades
-rather than breaks the fetch.
-As of Sept 7 there is no Anthropic API key on this machine — `grep -r "sk-ant"` and
-`grep ANTHROPIC ~/.zshrc` both came back empty.
-
-**C. Fix by hand in the admin panel.**
-Accurate, but the problem recurs with every fetch that pulls a name-only title.
-
-**Suggested path:** do A, watch for a week, and add B only if the remaining stragglers stay
-annoying. Easier to reverse that than to unwind a billing account. Lindsay is thinking it
-over — no decision yet.
+Worth knowing: any event with a defined run can now use this — a festival, a multi-hour event.
 
 ## Known data issues
+
+### UNRESOLVED: an event was deleted before it happened (found Sept 14)
+**Moms Unhinged**, Sept 22 at The Nomad Playhouse, vanished from the app. A title search returned
+nothing — the row was gone, not merely hidden. The show is real and still weeks away.
+
+`refresh-buckets.js` deletes events whose `starts_at` has passed, so the likely cause is a wrong
+stored date. **But this was never confirmed**, and if it's systematic other future events are
+being deleted the same way — silently, with no error, listings simply disappearing.
+
+Worth investigating: log what `refresh-buckets.js` deletes on each run rather than letting it
+remove rows quietly. Re-added by hand in the meantime.
+
+Related: **The Nomad Playhouse** wasn't in `VENUE_GEO` (now added at 40.048333, -105.279941). The
+admin panel's autofill draws on venues already in the database, so a brand-new venue gets nothing
+useful — it fills correctly only after the first event there is saved.
+
 1. **~54 events have `starts_at` NULL** and therefore can never appear under Today,
    Tomorrow, or This Weekend — they sit in Upcoming permanently. These are old rows from
    the retired `google_events` engine; **re-fetching cannot recover the dates**, since the
@@ -556,12 +847,151 @@ Keywords limit is 100 characters, comma-separated, **no spaces after commas** (t
 against the limit). Editable with each version submission, so revisit once there's real
 install data rather than guessing at search behavior.
 
+### App Store screenshots — submitted with 1.0.3 on Sept 11
+Three framed promotional screenshots, **1284 × 2778** (Apple's 6.5" display):
+
+1. **Tonight in Boulder.** — Today / Live Music feed
+2. **More than music.** — This Weekend / Food & Culture
+3. **Find your fun.** — Upcoming / Comedy
+
+Each shows a different category *and* a different time filter, so the three together cover the
+app without repeating. A map screenshot was made and then cut — the map isn't a strong enough
+feature to lead with.
+
+Design: Fog White `#F5F3EF` background, Poppins Medium headline in charcoal, status bar cropped
+(the sage band is exactly the top 186px of an iPhone 16 Pro Max capture), rounded corners with
+a soft shadow, and the final period in each headline set in amber to echo the logo. All three
+use an identical fixed headline block so the phone sits at the same size and position in every
+image — that's what makes a set look coordinated when someone swipes.
+
+**SIZE TRAP:** this listing's slot is **iPhone 6.5"**, which accepts only 1242 × 2688 or
+1284 × 2778. The first attempt was built at 1320 × 2868 (the 6.9" size, and the native
+resolution of the iPhone 16 Pro Max captures) and was **rejected**. Don't assume the larger
+size is accepted — check what slot the listing actually uses.
+
+Apple also briefly reported "wrong format" on the PNGs. Re-saving as flattened 8-bit RGB with
+metadata stripped, and supplying JPEGs (quality 95, no chroma subsampling) as an alternative,
+cleared it.
+
+Note: App Store Connect's line about "only the first 3 will be used" refers to the **install
+sheet**, not a cap. Apple allows up to 10, and all appear on the product page.
+
+### 1.0.3 (build 9) — submitted Sept 11
+No functional change; build 7 already carried everything through Sept 9, and the only later
+change (admin panel sign-in) is invisible to App Store users. The build exists to carry the new
+screenshots. "What's New" is accordingly modest.
+
+Builds 8 and 9 are identical — Distribute was run twice from the same archive. Build 9 was
+selected.
+
+### 1.0.4 (build 10) — uploaded Sept 16
+Adds Sign in with Apple. Also carries every web change since build 9.
+
+**What's New:** Sign in with Apple: sign in with one tap and Face ID, no email link needed.
+Your saved events stay with you.
+
+**Gotcha — trailing space in Version.** The first upload failed: `CFBundleShortVersionString,
+"1.0.4 ", must be composed of one to three period-separated integers.` Typing in Xcode's General
+tab left a space. Fixed in Terminal (quit Xcode first):
+```
+sed -i '' 's/MARKETING_VERSION = "*[ ]*1\.0\.4[ ]*"*;/MARKETING_VERSION = 1.0.4;/' ios/App/App.xcodeproj/project.pbxproj
+grep -n "MARKETING_VERSION\|CURRENT_PROJECT_VERSION" ios/App/App.xcodeproj/project.pbxproj
+```
+Every line must end `= 1.0.4;` / `= 10;` with no quotes or spaces. **Run that grep before every
+archive.** Archive needs **Any iOS Device (arm64)** selected, not the iPhone.
+
+**Uncommitted:** the version bump in `project.pbxproj` was made after commit `db7756e`.
+
+## Instagram — started Sept 14
+
+### Where things stand
+Account exists (`@gojaney`), **zero followers**, no promotion done yet. App Store analytics not
+yet switched on — worth doing, it's free and already collecting.
+
+Lindsay can give this **5 hours a week**. Bio link is set to
+`https://apps.apple.com/app/id6797317287` labelled "Download free app".
+
+### Monetization — deliberately deferred
+Running costs are about **$128/month** (~$1,540/yr), SerpApi at $75 being the bulk. Covering
+costs needs roughly one modest venue sponsorship — a much smaller goal than "build a business",
+and worth keeping separate in the mind.
+
+Nothing can be monetized until there's an audience. Options discussed for later: venue
+subscriptions (most plausible, but a sales job), sponsored placement, affiliate ticketing
+(passive, low rates), local advertising, eventual sale. Most need users first, so the order is
+fixed regardless of which is chosen.
+
+Also noted: **SerpApi may be oversized** — ~1,200 searches/month against a 5,000 allowance. The
+$25 Starter plan gives 1,000. Trimming a few venue queries would save $50/month.
+
+### The weekly plan
+Three posts a week, built from the app's own data:
+- **Monday** — one upcoming event worth knowing about
+- **Thursday** — the weekend roundup (strongest post: useful, shareable)
+- **Midweek** — category rotation
+
+**Tagging is the growth lever.** Every post tags the venues and artists, which puts the account
+in their notifications and, when reshared, in front of their followers. That's how small local
+accounts grow without ad spend.
+
+Venue handles collected so far: `@the_end_lafayette`, `@thelouisvilleunderground`,
+`@license1boulderado`, `@nomadplayhouse`. **Worth compiling the rest once and reusing** — Boulder
+Theater, Fox Theatre, eTown Hall, Gold Hill Inn, Oskar Blues Lyons, Nissi's, Velvet Elk, Roots
+Music Project, Trident, C Bar, VisionQuest.
+
+### On "prepare to screenshot"
+The Austin reel that inspired this ends with "*prepare to screenshot*" — good for them, wrong for
+us. It makes the post the destination. Ours says **"Full listings in the free app"** instead,
+which points onward. The trade is real: screenshot-friendly posts get saved and shared (reach),
+posts that withhold get installs (conversion). Current approach is a middle path — give enough to
+be worth saving, make clear the app has the rest.
+
+### Assets built
+Templates are generated with Python/PIL — scripts are NOT in the repo, they live only in the chat
+session. **If these need rebuilding, the design spec is:**
+- Square posts 1080×1080; Reel/Story frames 1080×1920
+- Fog White `#F5F3EF` ground, or photo with a dark gradient scrim
+- Poppins (Inter isn't available in that environment — geometric where Inter is neutral, fine for
+  marketing type, not an exact brand match)
+- Pine `#2F5D50` top bar, sage `#8FAF9A` day headers, amber `#D9A441` logo dot
+- Footer: "Full listings in the free app." + `@gojaney` left, `go janey.` right
+
+Built so far: a comedy post (square, photo background, licensed Shutterstock mic image) and a
+**four-frame weekend Reel** (Flatirons opener, Bands on the Bricks, Boulder Theater, Pearl Street
+at night).
+
+### The recurring design problem
+Every route to a brighter photo costs text contrast — they're the same variable. Tried and
+rejected: full-frame dark gradient (too dark), localised band behind text (visible stripe),
+per-glyph shadow (weak at small sizes), cream wash with dark text (killed the photo). Landed on a
+**light full-frame gradient with white Poppins**, sized up and bolded for the smaller blocks.
+
+**Practical lesson: pick photos with a calm area.** Sky, road, water. The Boulder Theater and
+Pearl Street night shots work; bright midday scenes fight the text throughout.
+
+### Outstanding
+- **The Flatirons opener photo is still a watermarked Shutterstock comp** — must be licensed
+  before posting
+- Lindsay wants a different photo for frame 4
+- Switch to a professional Instagram account for Insights (free; Meta Verified at ~$15/month is
+  not worth it at this stage)
+
 ## Original roadmap, still open
 
 ### Getting Lindsay's personal name off the App Store listing
-**Status as of Sept 8:** Go Janey LLC is formed and the documents are in hand. The D-U-N-S
-request was **submitted to Dun & Bradstreet on Sept 8** via Apple's lookup tool; awaiting
-their email with the number.
+**Status as of Sept 11 — D-U-N-S NUMBER RECEIVED:**
+
+```
+D-U-N-S Number: 149934013
+Business name:  Go Janey LLC
+City:           Boulder, UNITED STATES
+Request ID:     102122-10926396
+```
+
+Request submitted **Sept 8** and completed the same date; D&B says the number is usable **7 days
+after completion, so Sept 15.** Wait for that before contacting Apple — if Apple queries D&B
+before the new record has propagated, the lookup fails and the process may have to restart. If
+Apple cannot find it, wait a few more days and retry rather than assuming something is broken.
 
 The app currently shows Lindsay's legal name as the seller/developer, because the Apple
 Developer account is enrolled as an **Individual**. Per Apple's documentation, renaming the
