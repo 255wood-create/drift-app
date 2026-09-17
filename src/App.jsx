@@ -489,7 +489,7 @@ export default function App(){
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes spin{to{transform:rotate(360deg)}}
         ::-webkit-scrollbar{display:none}
-        .app-shell{min-height:100vh;min-height:-webkit-fill-available;min-height:100dvh}
+        .app-shell{box-sizing:border-box;padding-top:env(safe-area-inset-top);min-height:100vh;min-height:-webkit-fill-available;min-height:100dvh}
         *{scrollbar-width:none}
         input:focus{outline:none}
         button{user-select:none}
