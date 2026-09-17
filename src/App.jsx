@@ -1,3 +1,5 @@
+import { SignInWithApple } from '@capacitor-community/apple-sign-in';
+import { Capacitor as CapCore } from '@capacitor/core';
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from '@supabase/supabase-js';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -320,7 +322,7 @@ function SavedView({events,saved,interested,onSave,onInterest}){
   );
 }
 
-function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,events}){
+function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signInApple,signOut,saved,events}){
   if(!user){
     return(
       <div style={{flex:1,padding:"60px 20px",textAlign:"center"}}>
@@ -329,7 +331,7 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signOut,saved,e
         <p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:"#6B706C",marginBottom:20}}>Save events and build your profile</p>
         <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="Your email" type="email" style={{width:"100%",maxWidth:300,padding:"10px 14px",border:"1px solid #D9D6CF",fontFamily:"'Inter',sans-serif",fontSize:14,marginBottom:10}}/>
         <br/>
-        <button onClick={signIn} style={{background:"#2F5D50",color:"white",border:"none",padding:"10px 24px",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,cursor:"pointer",marginBottom:10}}>Send Sign-In Link</button>
+        {CapCore.isNativePlatform()&&(<><button onClick={signInApple} style={{background:"#000",color:"#fff",border:"none",padding:"12px 24px",fontFamily:"'Inter',sans-serif",fontSize:15,fontWeight:600,cursor:"pointer",marginBottom:12,display:"block"}}>{"\uF8FF"} Sign in with Apple</button><div style={{fontSize:12,color:"#888",marginBottom:10}}>or use email</div></>)}<button onClick={signIn} style={{background:"#2F5D50",color:"white",border:"none",padding:"10px 24px",fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,cursor:"pointer",marginBottom:10}}>Send Sign-In Link</button>
         {authMsg&&<p style={{fontFamily:"'Inter',sans-serif",fontSize:13,color:authMsg.includes("Check")?"#2F5D50":"#D9A441",marginTop:8}}>{authMsg}</p>}
         <a href="/submit.html" style={{display:"block",marginTop:28,fontFamily:"'Inter',sans-serif",fontSize:13,color:"#2F5D50",fontWeight:600,textDecoration:"none"}}>Know about an event? Submit one →</a>
       </div>
@@ -393,6 +395,26 @@ export default function App(){
     const{error}=await supabase.auth.signInWithOtp({email:authEmail,options:{emailRedirectTo:window.location.origin}});
     if(error)setAuthMsg(error.message);
     else setAuthMsg("Check your email for a sign-in link!");
+  };
+
+  const signInApple=async()=>{
+    try{
+      setAuthMsg("Opening Apple sign-in...");
+      const toHex=a=>Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');
+      const rawNonce=toHex(crypto.getRandomValues(new Uint8Array(16)));
+      const hashedNonce=toHex(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(rawNonce))));
+      const res=await SignInWithApple.authorize({clientId:'com.gojaney.app',redirectURI:'https://gojaney.com',scopes:'email name',nonce:hashedNonce});
+      const cred=res.response;
+      const{error}=await supabase.auth.signInWithIdToken({provider:'apple',token:cred.identityToken,nonce:rawNonce});
+      if(error){setAuthMsg(error.message);return;}
+      const fullName=[cred.givenName,cred.familyName].filter(Boolean).join(' ');
+      if(fullName)await supabase.auth.updateUser({data:{full_name:fullName}});
+      setAuthMsg("");
+    }catch(e){
+      const msg=String(e?.message||e);
+      if(/cancel|1001/i.test(msg))setAuthMsg("");
+      else setAuthMsg("Apple sign-in didn't work: "+msg);
+    }
   };
 
   const signOut=async()=>{
@@ -542,7 +564,7 @@ export default function App(){
 
         {screen==="map"&&<MapView events={displayed} allEvents={withDist} activeFilter={activeFilter} setFilter={setFilter} activeCat={activeCat} setCat={setCat} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
         {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
-        {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signOut={signOut} saved={saved} events={events}/>}
+        {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signInApple={signInApple} signOut={signOut} saved={saved} events={events}/>}
 
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
           <p style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:"#7A9583",textAlign:"center",padding:"0 10px",marginBottom:8}}>Before heading out, verify date, time, locations. We're good... not perfect.</p>
