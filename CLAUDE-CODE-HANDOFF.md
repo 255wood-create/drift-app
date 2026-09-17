@@ -622,7 +622,7 @@ denver, aurora, lakewood, littleton, englewood, thornton, arvada, westminster
 # NEXT STEPS
 
 ## Immediate
-1. **Submit 1.0.4 (build 10)** in App Store Connect if not already done, then watch for review.
+1. **1.0.4 (build 10) SUBMITTED Sept 16, 11:11 PM** — Waiting for Review. Watch for Apple's email.
    After release, confirm an App Store user can sign in with Apple. If Apple rejects for missing
    account deletion, add a "Delete account" option to Profile.
 2. **LLC → Organization conversion.** D-U-N-S **149934013** submitted to Apple Developer Support;
