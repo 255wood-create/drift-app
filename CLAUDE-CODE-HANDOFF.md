@@ -1,9 +1,8 @@
 # go janey. — Project Handoff (Updated September 8, 2026)
 
-> **This supersedes all older copies.** As of Sept 7 there were three stale versions on the
-> MacBook — `~/drift-boulder/CLAUDE-CODE-HANDOFF.md` (Aug 5),
-> `~/Desktop/gojaney/CLAUDE-CODE-HANDOFF.md` (Aug 4), and one in a Claude session folder
-> (Aug 1). Save this over the one in `~/drift-boulder/` and delete the others.
+> **This supersedes all older copies.** Several stale versions exist on the MacBook and in
+> `~/Downloads/` (numbered copies from repeated downloads). Save this over
+> `~/drift-boulder/CLAUDE-CODE-HANDOFF.md` and delete the rest.
 
 ## What This Is
 A mobile-first local event discovery app for Boulder, Colorado and nearby towns. Users open the app to see what's happening today, tomorrow, this weekend, or upcoming. Categories: Live Music, Comedy, Food & Culture. NOT an RSVP or ticketing system — purely discovery.
@@ -267,7 +266,6 @@ this should not recur.
 Cleaned to venue + town via `fixaddr.js`. Side effect worth knowing: those rows now normalize
 to the same `venueKey` as their siblings ("Boulder Theater Boulder" and "Boulder Theater" both
 → `bouldertheater`), so some may now group or dedupe where they previously didn't.
-
 
 ### CRITICAL: iOS viewport height — why bottom-padding fixes don't work
 The app shell must NOT use `min-height: 100vh`. On iOS, `100vh` is the viewport height with
