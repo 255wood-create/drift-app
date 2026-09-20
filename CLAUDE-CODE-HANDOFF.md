@@ -1353,3 +1353,16 @@ talking to a Colorado accountant or attorney.
 - Network Solutions DNS is slow to propagate
 - Cron only runs when the laptop is open
 - SQL goes in the Supabase SQL Editor in a browser, not the Mac Terminal. Clear the editor between queries — leftover text from a previous query will run instead.
+
+## Status as of Sept 20 (evening)
+- **1.0.6 — approved.**
+- **1.0.7 (build 14) — APPROVED and automatically released.** Contains the This Weekend bucket
+  fix (events from the following weekend no longer appear on Sat/Sun) plus the sign-in work.
+  Build 13 was superseded by 14; 14 is the shipped build.
+- Version numbers for 14 were set from Terminal, not Xcode's General tab — see the 1.0.5 section
+  for why that matters.
+- Still open: **D-U-N-S / Individual-to-Organization conversion** with Apple Developer Support so
+  the listing shows Go Janey LLC rather than a personal name. No reply as of Sept 20; the request
+  has been outstanding for over a week — worth chasing at developer.apple.com/contact.
+- Untracked item named `Upcoming` sits in the project root. Not app code, never committed;
+  delete when convenient.
