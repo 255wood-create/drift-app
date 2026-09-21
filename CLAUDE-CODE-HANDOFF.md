@@ -1372,7 +1372,8 @@ Apple guideline 5.1.1(v) requires in-app account deletion wherever an app offers
 creation. 1.0.7 shipped without it; this closes that gap before Apple raises it.
 
 **Server side — DONE, and it stays done.** A Postgres function created in the Supabase SQL
-editor (no Edge Function, no CLI):
+editor (no Edge Function, no CLI): public.delete_my_account(), declared security definer
+with search_path = public, returning void.
 It reads `auth.uid()` from the caller's session, so it can only ever delete the caller. It clears
 `saved_events`, `interested` and `user_profiles` for that user, then deletes the row from
 `auth.users`. Execute is granted to `authenticated` only, revoked from `public` and `anon`.
