@@ -322,7 +322,8 @@ function SavedView({events,saved,interested,onSave,onInterest}){
   );
 }
 
-function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signInApple,signOut,saved,events,isNative}){
+function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signInApple,signOut,deleteAccount,saved,events,isNative}){
+  const [delStep,setDelStep]=useState(0);
   if(!user){
     return(
       <div style={{flex:1,padding:"60px 20px",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
@@ -356,6 +357,7 @@ function ProfileView({user,authEmail,setAuthEmail,authMsg,signIn,signInApple,sig
       </div>
       <a href="/submit.html" style={{display:"block",width:"100%",boxSizing:"border-box",background:"#2F5D50",color:"white",border:"none",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,textAlign:"center",textDecoration:"none",marginBottom:10}}>Submit an Event</a>
       <button onClick={signOut} style={{width:"100%",background:"#F5F3EF",border:"1px solid #D9D6CF",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,color:"#6B706C",cursor:"pointer"}}>Sign Out</button>
+      {delStep===0?(<button onClick={()=>setDelStep(1)} style={{width:"100%",background:"none",border:"none",padding:"14px 10px 4px",fontFamily:"'Inter',sans-serif",fontSize:12,color:"#9A9E9B",cursor:"pointer",textDecoration:"underline"}}>Delete Account</button>):(<div style={{marginTop:14,padding:"12px",border:"1px solid #E0C4C4",background:"#FBF4F4"}}><p style={{fontFamily:"'Inter',sans-serif",fontSize:12,color:"#6B706C",marginBottom:10,lineHeight:1.5}}>This permanently deletes your account and your saved events. It cannot be undone.</p><button onClick={deleteAccount} style={{width:"100%",background:"#A94442",color:"white",border:"none",padding:"10px",fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,cursor:"pointer",marginBottom:8}}>Yes, delete my account</button><button onClick={()=>setDelStep(0)} style={{width:"100%",background:"none",border:"none",padding:"6px",fontFamily:"'Inter',sans-serif",fontSize:13,color:"#6B706C",cursor:"pointer"}}>Cancel</button></div>)}
     </div>
   );
 }
@@ -469,6 +471,13 @@ export default function App(){
       if(/cancel|1001/i.test(msg))setAuthMsg("");
       else setAuthMsg("Apple sign-in didn't work: "+msg);
     }
+  };
+
+  const deleteAccount=async()=>{
+    const{error}=await supabase.rpc('delete_my_account');
+    if(error){alert("Could not delete your account: "+error.message);return;}
+    await supabase.auth.signOut();
+    setUser(null);setSaved(new Set());setInterested(new Set());
   };
 
   const signOut=async()=>{
@@ -618,7 +627,7 @@ export default function App(){
 
         {screen==="map"&&<MapView events={displayed} allEvents={withDist} activeFilter={activeFilter} setFilter={setFilter} activeCat={activeCat} setCat={setCat} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
         {screen==="saved"&&<SavedView events={withDist} saved={saved} interested={interested} onSave={toggleSave} onInterest={toggleInt}/>}
-        {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signInApple={signInApple} signOut={signOut} saved={saved} events={events} isNative={isNative}/>}
+        {screen==="profile"&&<ProfileView user={user} authEmail={authEmail} setAuthEmail={setAuthEmail} authMsg={authMsg} signIn={signIn} signInApple={signInApple} signOut={signOut} deleteAccount={deleteAccount} saved={saved} events={events} isNative={isNative}/>}
 
         <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(245,243,239,0.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`0.5px solid ${T.stone}`,display:"flex",flexDirection:"column",zIndex:50,padding:"10px 0 max(16px,env(safe-area-inset-bottom))"}}>
           <p style={{fontFamily:"'Inter',sans-serif",fontSize:9,color:"#7A9583",textAlign:"center",padding:"0 10px",marginBottom:8}}>Before heading out, verify date, time, locations. We're good... not perfect.</p>
