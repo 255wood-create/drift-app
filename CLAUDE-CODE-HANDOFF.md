@@ -1366,3 +1366,32 @@ talking to a Colorado accountant or attorney.
   has been outstanding for over a week — worth chasing at developer.apple.com/contact.
 - Untracked item named `Upcoming` sits in the project root. Not app code, never committed;
   delete when convenient.
+
+## DELETE ACCOUNT — added Sept 20 (1.0.8, build 15, submitted)
+Apple guideline 5.1.1(v) requires in-app account deletion wherever an app offers account
+creation. 1.0.7 shipped without it; this closes that gap before Apple raises it.
+
+**Server side — DONE, and it stays done.** A Postgres function created in the Supabase SQL
+editor (no Edge Function, no CLI):
+It reads `auth.uid()` from the caller's session, so it can only ever delete the caller. It clears
+`saved_events`, `interested` and `user_profiles` for that user, then deletes the row from
+`auth.users`. Execute is granted to `authenticated` only, revoked from `public` and `anon`.
+**If a new table ever holds per-user data, add it to this function.**
+
+**App side.** `src/App.jsx`, commit `57b161a`: a grey "Delete Account" link under Sign Out on the
+signed-in Profile screen. Tapping it opens a warning panel with a red confirm and a Cancel
+(`delStep` state). Confirming calls `supabase.rpc('delete_my_account')`, signs out and clears
+local state. Verified end to end — the account disappeared from Supabase Authentication → Users.
+
+**Gotcha — blank Profile screen, second time.** The first script used `React.useState`, but
+App.jsx imports `useState` directly from "react" and never imports React itself, so Profile
+rendered white. **Any new hook in this file must be called bare (`useState`), not `React.useState`.**
+Reverted from `/tmp/App.jsx.before-delete`, then reapplied correctly.
+
+**Note on Apple sign-in behaviour.** Deleting the account in-app does NOT clear Apple's own
+record — the app stays listed under iPhone Settings → [name] → Sign in with Apple. So a user who
+deletes and signs back in is not re-asked Share/Hide My Email and gets a new account with the
+same address. Normal. To see the true first-run flow, tap the app there and "Stop Using Apple ID".
+
+**Tables holding per-user data:** `saved_events`, `interested`, `user_profiles`.
+`events` and `submissions` are shared data and are not touched.
