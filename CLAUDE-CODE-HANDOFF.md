@@ -1396,3 +1396,4 @@ same address. Normal. To see the true first-run flow, tap the app there and "Sto
 
 **Tables holding per-user data:** `saved_events`, `interested`, `user_profiles`.
 `events` and `submissions` are shared data and are not touched.
+- 1.0.9 (build 16) SUBMITTED Sept 22: footer shows (c) 2026 Go Janey LLC . support@gojaney.com in the app.
