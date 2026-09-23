@@ -1413,3 +1413,19 @@ To add an admin later: insert their auth.users id into public.admins. No policy 
 
 WARNING: do not test Delete Account on an admin login. It removes the account, the new id is not
 an admin, and the panel silently stops saving. Use a throwaway sign-in to test deletion.
+
+## ADMIN PANEL LOCKOUT AND THE ADMINS TABLE (Sept 23)
+Symptom: admin.html could read events but Save did nothing, no console error. The Network tab
+showed the PATCH returning 200 with a tiny body: RLS allowed the request but matched zero rows.
+
+Cause: the events policies listed admin user IDs inline. Deleting the account on Sept 21 while
+testing Delete Account created a NEW account with a NEW id on sign-in, so the current login was
+no longer an admin. Reads still worked because "public can read events" allows everyone.
+
+Fix: public.admins table (user_id, email), plus public.is_admin() (security definer) reading it.
+The insert/update/delete policies on events now call is_admin() instead of listing ids.
+Admin accounts: 255wood@gmail.com and lindsayscott170@gmail.com.
+To add an admin later: insert their auth.users id into public.admins. No policy edits needed.
+
+WARNING: do not test Delete Account on an admin login. It removes the account, the new id is not
+an admin, and the panel silently stops saving. Use a throwaway sign-in to test deletion.
