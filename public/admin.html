@@ -472,8 +472,15 @@ loadSubmissions();
 }
 
 function delEvt(id){
-if(!confirm("Delete this event?"))return;
-api("events?id=eq."+id,"DELETE").then(function(){loadEvts();});
+if(!confirm("Delete this event? Future fetches will not add it back."))return;
+api("events?id=eq."+id+"&select=title,location,starts_at").then(function(r){return r.json();}).then(function(rows){
+var ev=rows&&rows[0];
+var rec=ev?api("blocked_events","POST",{title:ev.title,location:ev.location,starts_at:ev.starts_at}):Promise.resolve(null);
+return rec.then(function(res){
+if(res&&!res.ok){alert("Could not record the block ("+res.status+"). Event was NOT deleted.");return;}
+return api("events?id=eq."+id,"DELETE").then(function(){loadEvts();});
+});
+});
 }
 
 function copyPrompt(){
