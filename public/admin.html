@@ -405,11 +405,12 @@ for(var m=0;m<grp.length;m++)dupeIds[grp[m].id]=true;
 }
 document.getElementById("cnt").textContent="("+data.length+")"+(showPast?"":", "+visible.length+" shown")+(dupeGroups?" · "+dupeGroups+" possible duplicate"+(dupeGroups>1?"s":""):"");
 var vibeLine=function(e){if(e.vibe)return "<div style='font-size:12px;color:#888;font-style:italic;margin-top:2px'>"+e.vibe+"</div>";if(e.category==="music")return "<div style='font-size:11px;color:#B7791F;margin-top:2px'>no vibe</div>";return "";};
+var liveBucket=function(iso){if(!iso)return "Upcoming";var f=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Denver",year:"numeric",month:"2-digit",day:"2-digit"});var ev=new Date(f.format(new Date(iso))+"T00:00:00Z");var td=new Date(f.format(new Date())+"T00:00:00Z");var diff=Math.round((ev-td)/86400000);if(diff<0)return "Past";if(diff===0)return "Today";if(diff===1)return "Tomorrow";var dtf=(5-td.getUTCDay()+7)%7;if(diff>=dtf&&diff<=dtf+2)return "This Weekend";return "Upcoming";};
 var h="<table><tr><th>Title</th><th>Cat</th><th>Bucket</th><th>When</th><th></th></tr>";
 for(var i=0;i<visible.length;i++){
 var e=visible[i];
 var isDupe=!!dupeIds[e.id];
-h+="<tr"+(isDupe?" style='background:#FEF0E0'":"")+"><td>"+(isDupe?"⚠️ ":"")+e.title+vibeLine(e)+"</td><td>"+e.category+"</td><td>"+(e.time_bucket||"")+"</td>";
+h+="<tr"+(isDupe?" style='background:#FEF0E0'":"")+"><td>"+(isDupe?"⚠️ ":"")+e.title+vibeLine(e)+"</td><td>"+e.category+"</td><td>"+liveBucket(e.starts_at)+"</td>";
 h+="<td>"+(e.starts_at?new Date(e.starts_at).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"—")+"</td>";
 h+="<td><button class=del style='background:#E8F0EC;color:#2F5D50' onclick=\"editEvt('"+e.id+"')\">Edit</button> <button class=del onclick=\"delEvt('"+e.id+"')\">Del</button></td></tr>";
 }
